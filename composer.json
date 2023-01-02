@@ -1,5 +1,5 @@
 {
-    "name": "jthatch/advent-of-code-2021-php",
+    "name": "jthatch/advent-of-code-2022-php",
     "authors": [
         {
             "name": "James Thatcher",
@@ -8,15 +8,15 @@
     ],
     "type": "project",
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
         "ext-bcmath": "*",
         "ext-gmp": "*",
-        "illuminate/collections": "^v9.10.1"
+        "illuminate/collections": "^9.45"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.4",
-        "friendsofphp/php-cs-fixer": "^v3.6.0",
-        "symplify/phpstan-extensions": "^10.0"
+        "friendsofphp/php-cs-fixer": "",
+        "symplify/phpstan-extensions": "^10.3.3"
     },
     "autoload": {
         "psr-4": {

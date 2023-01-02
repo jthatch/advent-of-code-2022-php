@@ -1,6 +1,8 @@
-FROM php:8.1-cli
+FROM php:8.2-cli
 
 ENV XDEBUG_MODE=off
+# php-cs-fixer is not available for php 8.2 yet https://github.com/PHP-CS-Fixer/PHP-CS-Fixer/issues/6704
+ENV PHP_CS_FIXER_IGNORE_ENV=1
 
 RUN apt update -y \
 	&& apt-get install -y git unzip zip \

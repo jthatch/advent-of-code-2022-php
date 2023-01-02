@@ -33,7 +33,7 @@ help: ## This help.
 .PHONY: tests
 
 # basic vars
-image-name :=aoc-2021
+image-name :=aoc-2022
 uid        :=$(shell id -u)
 gid        :=$(shell id -g)
 
