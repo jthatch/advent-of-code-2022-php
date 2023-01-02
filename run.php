@@ -1,8 +1,14 @@
 <?php
-/** Advent of Code 2021 PHP runner.
+/** Advent of Code 2022 PHP runner.
  *
  * Usage:
- *  php run.php [day] [part] [withExamples]
+ * php run.php <options>
+ * -d,--day PATTERN          Only run days that match pattern (range or comma-separated list)
+ * -p,--part PATTERN         Only run parts that match pattern (range or comma-separated list)
+ * -e,--examples             Runs the examples
+ * -h,--help                 This help message
+
+ *  php run.php --day=[day] --part=[part] --examples
  *  [day]  = optional - The day(s) to run. Can be a range (1-10) or comma-separated (1,2,5) including combination of both.
  *  [part] = optional - The part to run
  *  [withExamples] = optional - Will run the examples if defined in the Day class
@@ -11,30 +17,53 @@
  *  php run.php
  *      - Run all days
  *
- *  php run.php 1-5,9
- *      - Run Days 1-5 & 9
+ * php run.php --day=15 --examples
+ *      - Run day 15 examples
  *
- *  php run.php 10
- *      - Run Day 10 part 1 & 2
+ *  php run.php --day=1-5,9
+ *      - Run days 1-5 & 9
  *
- *  php run.php 6,7 2
- *      - Run Days 6 & 7 part 2
+ *  php run.php --day=10
+ *      - Run day 10 part 1 & 2
  *
- *  php run.php 1-25 1 yes
- *      - Run Days 1-25 part 1 with examples
+ *  php run.php --day=6,7 --part=2
+ *      - Run days 6 & 7 part 2
  *
+ *  php run.php --day=1-25 --examples
+ *      - Run days 1-25 with examples
  */
 declare(strict_types=1);
 
 use App\Contracts\DayInterface;
 use App\DayFactory;
+use App\Runner\DTO\CliArg;
+use App\Runner\DTO\CliArgType;
+use App\Runner\ParseCliArgs;
+use App\Runner\Runner;
 
 $totalStartTime = microtime(true);
 require 'vendor/autoload.php';
 
+$cliArgs = [
+    new CliArg(longName: 'day', type: CliArgType::WITH_VALUE),
+    new CliArg(longName: 'part', type: CliArgType::WITH_VALUE),
+    new CliArg('examples', type: CliArgType::NO_VALUE),
+    new CliArg('help', type: CliArgType::NO_VALUE),
+];
+
+$cli = new ParseCliArgs(...$cliArgs);
+
+$options = $cli->getOptions();
+$runner  = new Runner($options, new DayFactory());
+
+$runner->run();
+
+// var_dump($cli->options);
+exit;
+
 // extract days from comma-seperated and ranged list (e.g. "1-3,5" would result in [1,2,3,5])
-$onlyRunDays  = $argv[1] ?? null
-    ? array_reverse(array_merge([], ...array_map(fn(string $dayChunk) => (str_contains($dayChunk, '-') && [$start, $end] = sscanf($dayChunk, '%d-%d')) ? range($start, $end) : [$dayChunk], explode(',', $argv[1]))))
+$onlyRunDays = $argv[1] ?? null
+    ? array_reverse(array_merge([], ...array_map(fn (string $dayChunk) => (str_contains($dayChunk, '-') && [$start, $end] = sscanf($dayChunk, '%d-%d')) ? range($start, $end) : [$dayChunk], explode(',', $argv[1]))))
     : null;
 $onlyRunPart = match ($argv[2] ?? null) {
     '1', '2' => (int) $argv[2],
@@ -46,7 +75,7 @@ $withExamples = isset($argv[3]);
 // otherwise returns all days that have been solved.
 $dayGenerator = $onlyRunDays
     ? (static function () use (&$onlyRunDays) {
-        while(!empty($onlyRunDays)) {
+        while (!empty($onlyRunDays)) {
             yield DayFactory::create((int) array_pop($onlyRunDays));
         }
     })()

@@ -18,7 +18,7 @@ class DayFactory
     /**
      * @throws DayInputNotFoundException|DayClassNotFoundException
      */
-    public static function create(int $dayNumber): Day
+    public function create(int $dayNumber): Day
     {
         /** @phpstan-var class-string<DayInterface> **/
         $dayClassName = self::getDayClass($dayNumber);
@@ -34,11 +34,11 @@ class DayFactory
         return new $dayClassName($dayInput);
     }
 
-    public static function allAvailableDays(): \Generator
+    public function allAvailableDays(): \Generator
     {
         foreach (range(1, static::MAX_DAYS) as $dayNumber) {
             try {
-                yield static::create($dayNumber);
+                yield $this->create($dayNumber);
             } catch (\Exception|\Error) {
                 break; // ignore days we haven't solved yet
             }

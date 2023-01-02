@@ -15,7 +15,7 @@
     },
     "require-dev": {
         "phpstan/phpstan": "^1.4",
-        "friendsofphp/php-cs-fixer": "",
+        "friendsofphp/php-cs-fixer": "v3.13.1",
         "symplify/phpstan-extensions": "^10.3.3"
     },
     "autoload": {

@@ -11,19 +11,25 @@ nextDay   :=$(shell echo $$(($(latestDay)+1)))
 # then set export AOC_COOKIE=53616c7465645f5f2b44c4d4742765e14...
 aocCookie :=$(AOC_COOKIE)
 
-# append day={N} to make commands to run just that day
+# append --day={N} to make commands to run just that day
 ifdef day
-	onlyThisDay :=$$day
+	onlyThisDay :=--day=$$day
 else
 	onlyThisDay :=
 endif
-# append part={N} to make commands to run just that part
+# append --part={N} to make commands to run just that part
 ifdef part
-	onlyThisPart :=$$part
+	onlyThisPart :=--part=$$part
 else
 	onlyThisPart :=
 endif
-onlyThis:=$(onlyThisDay) $(onlyThisPart)
+# append --examples to make commands to run with examples
+ifdef examples
+	withExamples :=--examples
+else
+	withExamples :=
+endif
+runArgs:=$(onlyThisDay) $(onlyThisPart) $(withExamples)
 
 help: ## This help.
 	@printf "\033[32m---------------------------------------------------------------------------\n  Advent of Code 2021 - James Thatcher\n  Current Day:\033[33m $(latestDay)\033[32m\n---------------------------------------------------------------------------\033[0m\n"
@@ -60,7 +66,7 @@ ifeq ($(shell docker image inspect $(image-name) > /dev/null 2>&1 || echo not_ex
 	make run
 else
 ifneq ("$(wildcard vendor)", "")
-	@$(DOCKER_RUN) $(image-name) php $(PHP_CL_TWEAKS) run.php $(onlyThis)
+	@$(DOCKER_RUN) $(image-name) php $(PHP_CL_TWEAKS) run.php $(runArgs)
 else
 	@echo -e "\nFirst run detected! No vendor/ folder found, running composer update...\n"
 	make composer
@@ -84,10 +90,10 @@ shell: ## Launch a shell into the docker container
 	$(DOCKER_RUN) $(image-name) /bin/bash
 
 xdebug: ## Launch a php container with xdebug (port 10000)
-	@$(DOCKER_RUN) -e XDEBUG_MODE=debug $(image-name) php -dmemory_limit=1G run.php $(onlyThis)
+	@$(DOCKER_RUN) -e XDEBUG_MODE=debug $(image-name) php -dmemory_limit=1G run.php $(runArgs)
 
 xdebug-profile: ## Runs the xdebug profiler for analysing performance
-	$(DOCKER_RUN) -e XDEBUG_MODE=profile $(image-name) php -dxdebug.output_dir=/app -dmemory_limit=1G run.php $(onlyThis)
+	$(DOCKER_RUN) -e XDEBUG_MODE=profile $(image-name) php -dxdebug.output_dir=/app -dmemory_limit=1G run.php $(runArgs)
 
 cleanup: ## remove all docker images
 	docker rm $$(docker ps -a | grep '$(image-name)' | awk '{print $$1}') --force || true
