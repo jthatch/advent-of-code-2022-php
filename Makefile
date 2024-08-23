@@ -1,11 +1,12 @@
 SHELL=bash
+args=`arg="$(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))" && echo $${arg:-${1}}`
 # advent of code helpers
 # looks in src/ for any Day[N].php files, sorts for the highest and sets that value
 # When you move to a new day you would create the DayN.php file then run `make get-input`
 # to retrieve that input, storing it in ./input/day[N].txt
 # saves time
 OS_NAME   :=$(shell uname -s | tr A-Z a-z)
-latestDay :=$(shell if [[ "$(OS_NAME)" == "linux" ]]; then find src -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -printf '%f\n' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1";  else find src -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -print0 | xargs -0 stat -f '%N ' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1"; fi)
+latestDay :=$(shell if [[ "$(OS_NAME)" == "linux" ]]; then find src/Days -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -printf '%f\n' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1";  else find src -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -print0 | xargs -0 stat -f '%N ' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1"; fi)
 nextDay   :=$(shell echo $$(($(latestDay)+1)))
 # in order to retrieve the Days input from the server you must login to adventofcode.com and grab the `session` cookie
 # then set export AOC_COOKIE=53616c7465645f5f2b44c4d4742765e14...
@@ -25,7 +26,7 @@ else
 endif
 # append --examples to make commands to run with examples
 ifdef examples
-	withExamples :=--examples
+	withExamples :=--examples=1
 else
 	withExamples :=
 endif
@@ -59,27 +60,27 @@ define PHP_CL_TWEAKS
 -dmemory_limit=1G -dopcache.enable_cli=1 -dopcache.jit_buffer_size=100M -dopcache.jit=1255
 endef
 
+# suppress make: *** No rule to make target 'hydrate:state'.  Stop.
+%:
+	@:
+
 run: ## runs each days solution without test framework
 ifeq ($(shell docker image inspect $(image-name) > /dev/null 2>&1 || echo not_exists), not_exists)
 	@echo -e "\nFirst run detected! No $(image-name) docker image found, running docker build...\n"
 	make build
-	make run
+	make run $(runArgs)
 else
 ifneq ("$(wildcard vendor)", "")
 	@$(DOCKER_RUN) $(image-name) php $(PHP_CL_TWEAKS) run.php $(runArgs)
 else
 	@echo -e "\nFirst run detected! No vendor/ folder found, running composer update...\n"
 	make composer
-	make run
+	make run $(runArgs)
 endif
 endif
 
 composer: ## Runs `composer update` on CWD, specify other commands via cmd=
-ifdef cmd
-	$(DOCKER_RUN) $(image-name) composer --no-cache $(cmd)
-else
-	$(DOCKER_RUN) $(image-name) composer --no-cache update
-endif
+	$(DOCKER_RUN) $(image-name) composer --no-cache $(call args)
 
 build: ## Builds the docker image
 	DOCKER_BUILDKIT=1 docker build --build-arg UID=$(shell id -u) --build-arg GID=$(shell id -g) \
@@ -111,7 +112,7 @@ ifndef aocCookie
 	@echo -e "Then set the environmental variable AOC_COOKIE. e.g. export AOC_COOKIE=53616c7465645f5f2b44c4d4742765e14...\n"
 else
 	@echo -e "Fetching latest input using day=$(latestDay) AOC_COOKIE=$(aocCookie)"
-	@curl -s --location --request GET 'https://adventofcode.com/2021/day/$(latestDay)/input' --header 'Cookie: session=$(aocCookie)' -o ./input/day$(latestDay).txt && echo "./input/day$(latestDay).txt downloaded" || echo "error downloading"
+	@curl -s --location --request GET 'https://adventofcode.com/2022/day/$(latestDay)/input' --header 'Cookie: session=$(aocCookie)' -o ./input/day$(latestDay).txt && echo "./input/day$(latestDay).txt downloaded" || echo "error downloading"
 endif
 define DAY_TEMPLATE
 <?php\n\ndeclare(strict_types=1);\n\nnamespace App;\n\nuse App\Contracts\DayBehaviour;\n\nclass Day$(nextDay) extends DayBehaviour\n{\n    public function solvePart1(): ?int\n    {\n        // TODO: Implement solvePart1() method.\n        return null;\n    }\n\n    public function solvePart2(): ?int\n    {\n        // TODO: Implement solvePart2() method.\n        return null;\n    }\n}\n

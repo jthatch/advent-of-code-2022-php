@@ -6,16 +6,28 @@ namespace App\Contracts;
 
 abstract class Day implements DayInterface
 {
-    abstract public function solvePart1(mixed $input): ?string;
-
-    abstract public function solvePart2(mixed $input): ?string;
+    public const EXAMPLE1 = '';
+    public const EXAMPLE2 = '';
 
     /**
-     * Override this method to perform parsing on the days input.
+     * @param array<int, string> $input
      */
-    public function parseInput(array $input): mixed
+    public function __construct(public readonly mixed $input)
     {
-        return $input;
+    }
+
+    abstract public function solvePart1(mixed $input): int|string|null;
+
+    abstract public function solvePart2(mixed $input): int|string|null;
+
+    public function getExample1(): mixed
+    {
+        return static::EXAMPLE1;
+    }
+
+    public function getExample2(): mixed
+    {
+        return static::EXAMPLE2;
     }
 
     /**

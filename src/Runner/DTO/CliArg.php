@@ -29,6 +29,6 @@ class CliArg
 
     public function value(): mixed
     {
-        return $this->value;
+        return $this->value ?? null;
     }
 }

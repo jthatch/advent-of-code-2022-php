@@ -23,9 +23,9 @@ class ParseCliArgs
     public function getOptions(): Options
     {
         return new Options(
-            days: $this->options['day']?->value,
-            parts: $this->options['part']?->value,
-            withExamples: (bool) $this->options['examples']?->value
+            days: $this->options['day']?->value   ?? null,
+            parts: $this->options['part']?->value ?? null,
+            withExamples: (bool) ($this->options['examples']?->value ?? false),
         );
     }
 

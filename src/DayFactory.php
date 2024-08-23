@@ -12,7 +12,7 @@ use App\Exceptions\DayInputNotFoundException;
 class DayFactory
 {
     protected const MAX_DAYS     = 25;
-    protected const CLASS_FORMAT = 'Day%d';
+    protected const CLASS_FORMAT = 'Days\\Day%d';
     protected const INPUT_FORMAT = __DIR__.'/../input/day%d.txt';
 
     /**
@@ -38,7 +38,8 @@ class DayFactory
     {
         foreach (range(1, static::MAX_DAYS) as $dayNumber) {
             try {
-                yield $this->create($dayNumber);
+                $day = $this->create($dayNumber);
+                yield $day;
             } catch (\Exception|\Error) {
                 break; // ignore days we haven't solved yet
             }
