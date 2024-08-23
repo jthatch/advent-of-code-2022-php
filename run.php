@@ -53,7 +53,6 @@ $cliArgs = [
 $cli = new ParseCliArgs(...$cliArgs);
 
 $options = $cli->getOptions();
-var_dump($options);
-$runner = new Runner($options, new DayFactory());
+$runner  = new Runner($options, new DayFactory());
 
 $runner->run();
