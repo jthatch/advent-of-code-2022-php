@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Contracts;
 
+use Illuminate\Support\Collection;
+
 abstract class Day implements DayInterface
 {
     public const EXAMPLE1 = '';
@@ -28,6 +30,16 @@ abstract class Day implements DayInterface
     public function getExample2(): mixed
     {
         return static::EXAMPLE2;
+    }
+
+    /**
+     * Override to customise input parsing.
+     */
+    protected function parseInput(mixed $input): Collection
+    {
+        $input = is_array($input) ? $input : explode("\n", $input);
+
+        return collect($input);
     }
 
     /**

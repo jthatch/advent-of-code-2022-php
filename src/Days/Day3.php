@@ -87,13 +87,6 @@ class Day3 extends Day
             ->map(fn ($chunk) => array_sum($chunk))->sum();
     }
 
-    protected function parseInput(mixed $input): Collection
-    {
-        $input = is_array($input) ? $input : explode("\n", $input);
-
-        return collect($input);
-    }
-
     public function getExample2(): mixed
     {
         return static::EXAMPLE1;
