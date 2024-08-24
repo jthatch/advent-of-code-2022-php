@@ -53,7 +53,7 @@ class Runner
 
             if (null === $this->options->parts || in_array(2, $this->options->parts ?? [], true)) {
                 $startTime = microtime(true);
-                printf("    Part1 \e[1;32m%s\e[0m\n", $day->solvePart2($day->input));
+                printf("    Part2 \e[1;32m%s\e[0m\n", $day->solvePart2($day->input));
                 $this->report($startTime);
             }
         }

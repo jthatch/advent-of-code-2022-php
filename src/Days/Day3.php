@@ -61,7 +61,30 @@ class Day3 extends Day
 
     public function solvePart2(mixed $input): int|string|null
     {
-        return '';
+        return $this->parseInput($input)
+            // split into groups of 3
+            ->chunk(3)
+            // identify the badge: the badge is the only item type carried by all three Elves.
+            ->map(function (Collection $chunk) {
+                [$first, $second, $third] = $chunk->values();
+
+                return array_unique(array_intersect(
+                    str_split($first),
+                    str_split($second),
+                    str_split($third),
+                ));
+            })
+            // convert to a priority
+            ->map(
+                fn (array $commonChars) => collect($commonChars)
+                    ->map(
+                        fn ($char) => ctype_lower($char)
+                            ? ord($char) - ord('a') + 1 // a-z: 1-26
+                            : ord($char) - ord('A') + 27 // A-Z: 27-52
+                    )->toArray()
+            )
+            // sum them all
+            ->map(fn ($chunk) => array_sum($chunk))->sum();
     }
 
     protected function parseInput(mixed $input): Collection
