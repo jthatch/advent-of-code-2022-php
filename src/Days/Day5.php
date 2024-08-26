@@ -40,12 +40,18 @@ class Day5 extends Day
             // move the crates one at a time
             while ($amount > 0) {
                 --$amount;
-                $crate = $diagram->get($from)->pop();
-                $diagram->get($to)->push($crate);
+
+                /** @var Collection $fromStack */
+                $fromStack = $diagram->get($from);
+                /** @var Collection $toStack */
+                $toStack = $diagram->get($to);
+
+                $crate = $fromStack->pop();
+                $toStack->push($crate);
             }
         }
 
-        return collect($diagram)->map(fn ($stack) => $stack->pop())->implode('');
+        return $diagram->map(fn ($stack) => $stack->pop())->implode('');
     }
 
     /**
@@ -64,13 +70,17 @@ class Day5 extends Day
             preg_match("/move (\d+) from (\d+) to (\d+)/", $instruction, $matches);
             [, $amount, $from, $to] = $matches;
             $amount                 = (int) $amount;
+
+            /** @var Collection $fromStack */
+            $fromStack = $diagram->get($from);
+            /** @var Collection $toStack */
+            $toStack = $diagram->get($to);
+
             // move the crates in bulk preserving the original order
-            $diagram->get($from)->splice(-$amount)->each(function ($item) use ($diagram, $to) {
-                $diagram->get($to)->push($item);
-            });
+            $fromStack->splice(-$amount)->each(fn ($item) => $toStack->push($item));
         }
 
-        return collect($diagram)->map(fn ($stack) => $stack->pop())->implode('');
+        return $diagram->map(fn ($stack) => $stack->pop())->implode('');
     }
 
     protected function parseInput(mixed $input): Collection
@@ -106,10 +116,5 @@ class Day5 extends Day
         }
 
         return collect($stacks);
-    }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE1;
     }
 }

@@ -27,9 +27,12 @@ abstract class Day implements DayInterface
         return static::EXAMPLE1;
     }
 
+    /**
+     * Override if there's a second example.
+     */
     public function getExample2(): mixed
     {
-        return static::EXAMPLE2;
+        return static::EXAMPLE1;
     }
 
     /**
