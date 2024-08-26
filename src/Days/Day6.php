@@ -47,6 +47,8 @@ class Day6 extends Day
 
                 return false;
             }
+
+            return true;
         });
 
         return $offset;

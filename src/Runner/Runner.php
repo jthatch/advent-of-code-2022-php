@@ -25,6 +25,7 @@ class Runner
         }
 
         $this->showStart();
+        $totalStartTime = microtime(true);
 
         /** @var Day $day */
         foreach ($this->dayGenerator() as $day) {
@@ -57,6 +58,13 @@ class Runner
                 $this->report($startTime);
             }
         }
+
+        printf(<<<eof
+        \e[32m---------------------------------------------
+        |\e[0m Total time: \e[2m%.5fs\e[0m                     \e[32m |
+        ---------------------------------------------\e[0m
+        
+        eof, microtime(true) - $totalStartTime);
     }
 
     protected function dayGenerator(): \Generator

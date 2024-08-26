@@ -40,7 +40,6 @@ use App\Runner\DTO\CliArgType;
 use App\Runner\ParseCliArgs;
 use App\Runner\Runner;
 
-$totalStartTime = microtime(true);
 require 'vendor/autoload.php';
 
 $cliArgs = [
