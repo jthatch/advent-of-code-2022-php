@@ -106,7 +106,7 @@ class Day7 extends Day
             } elseif (str_starts_with($chunk[0] ?? '', '$ ls')) {
                 // remove the command and extract files and folders
                 $chunk->shift();
-                $chunk?->map(function ($line) use (&$fs, &$currentDir) {
+                $chunk->map(function ($line) use (&$fs, &$currentDir) {
                     [$typeOrSize, $name] = explode(' ', $line);
                     if ('dir' === $typeOrSize) {
                         $fs[$currentDir]['dirs'][] = $name;
@@ -123,6 +123,14 @@ class Day7 extends Day
         return collect($fs);
     }
 
+    /**
+     * Calculates the total size of a directory and all its subdirectories in a given filesystem.
+     *
+     * @param array  $fs         a reference to the filesystem array
+     * @param string $currentDir the path of the current directory
+     *
+     * @return int the total size of the directory and its subdirectories
+     */
     protected function calculateSize(array &$fs, string $currentDir): int
     {
         if (isset($fs[$currentDir]['size'])) {

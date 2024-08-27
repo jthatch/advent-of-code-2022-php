@@ -35,19 +35,21 @@ class Day5 extends Day
         while ($instructions->isNotEmpty()) {
             $instruction = (string) $instructions->shift();
             preg_match("/move (\d+) from (\d+) to (\d+)/", $instruction, $matches);
-            [, $amount, $from, $to] = $matches;
-            $amount                 = (int) $amount;
-            // move the crates one at a time
-            while ($amount > 0) {
-                --$amount;
+            if (4 === count($matches)) {
+                [, $amount, $from, $to] = $matches;
+                $amount                 = (int) $amount;
+                // move the crates one at a time
+                while ($amount > 0) {
+                    --$amount;
 
-                /** @var Collection $fromStack */
-                $fromStack = $diagram->get($from);
-                /** @var Collection $toStack */
-                $toStack = $diagram->get($to);
+                    /** @var Collection $fromStack */
+                    $fromStack = $diagram->get($from);
+                    /** @var Collection $toStack */
+                    $toStack = $diagram->get($to);
 
-                $crate = $fromStack->pop();
-                $toStack->push($crate);
+                    $crate = $fromStack->pop();
+                    $toStack->push($crate);
+                }
             }
         }
 
@@ -68,16 +70,18 @@ class Day5 extends Day
         while ($instructions->isNotEmpty()) {
             $instruction = (string) $instructions->shift();
             preg_match("/move (\d+) from (\d+) to (\d+)/", $instruction, $matches);
-            [, $amount, $from, $to] = $matches;
-            $amount                 = (int) $amount;
+            if (4 === count($matches)) {
+                [, $amount, $from, $to] = $matches;
+                $amount                 = (int) $amount;
 
-            /** @var Collection $fromStack */
-            $fromStack = $diagram->get($from);
-            /** @var Collection $toStack */
-            $toStack = $diagram->get($to);
+                /** @var Collection $fromStack */
+                $fromStack = $diagram->get($from);
+                /** @var Collection $toStack */
+                $toStack = $diagram->get($to);
 
-            // move the crates in bulk preserving the original order
-            $fromStack->splice(-$amount)->each(fn ($item) => $toStack->push($item));
+                // move the crates in bulk preserving the original order
+                $fromStack->splice(-$amount)->each(fn ($item) => $toStack->push($item));
+            }
         }
 
         return $diagram->map(fn ($stack) => $stack->pop())->implode('');

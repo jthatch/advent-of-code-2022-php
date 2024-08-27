@@ -6,5 +6,5 @@ namespace App\Runner;
 
 interface RunnerInterface
 {
-    public function run();
+    public function run(): void;
 }

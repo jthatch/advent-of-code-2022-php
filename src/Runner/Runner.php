@@ -7,7 +7,7 @@ namespace App\Runner;
 use App\Contracts\Day;
 use App\DayFactory;
 
-class Runner
+class Runner implements RunnerInterface
 {
     protected ?array $days;
 

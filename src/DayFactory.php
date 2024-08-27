@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App;
 
 use App\Contracts\Day;
-use App\Contracts\DayInterface;
 use App\Exceptions\DayClassNotFoundException;
 use App\Exceptions\DayInputNotFoundException;
 
@@ -20,7 +19,7 @@ class DayFactory
      */
     public function create(int $dayNumber): Day
     {
-        /** @phpstan-var class-string<DayInterface> **/
+        /** @phpstan-var class-string<Day> **/
         $dayClassName = self::getDayClass($dayNumber);
         $dayInputName = self::getDayInput($dayNumber);
 
@@ -47,7 +46,7 @@ class DayFactory
     }
 
     /**
-     * @return class-string<DayInterface>|string
+     * @return class-string<Day>|string
      */
     private static function getDayClass(int $dayNumber): string
     {

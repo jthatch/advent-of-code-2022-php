@@ -25,6 +25,7 @@ class Day2 extends Day
                 'A', 'X' => 'rock',
                 'B', 'Y' => 'paper',
                 'C', 'Z' => 'scissors',
+                default => null,
             })->toArray())
             ->map(function ($pair) {
                 $ourShape = $pair[1];
