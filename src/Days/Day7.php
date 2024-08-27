@@ -67,14 +67,8 @@ class Day7 extends Day
      * Builds a filesystem representation based on the given input collection.
      *
      * @param Collection $io the input collection containing commands and their output
-     *
      * @return Collection The filesystem representation as an associative array wrapped in a collection.
      *
-     * The method builds the filesystem representation by iterating over the input collection.
-     * It processes "cd" commands to change the current directory and updates the filesystem accordingly.
-     * It also processes "ls" commands to list files and directories in the current directory and updates the filesystem.
-     * Finally, it recursively calculates the size of each directory in the filesystem representation.
-     * The resulting filesystem representation is returned as an associative array.
      * e.g. ['/' => ['size' => 1000], '/a' => ['size' => 600], '/b' => ['size' => 400]]
      */
     protected function buildFilesystem(Collection $io): Collection
