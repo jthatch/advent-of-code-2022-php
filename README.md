@@ -6,6 +6,9 @@ The solutions to [advent of code 2022](https://adventofcode.com/2022), solved us
 ### About
 My attempts at tacking the awesome challenges at [Advent of Code 2022](https://adventofcode.com/2022/day/1) using PHP 8.2.
 
+
+![day runner in action](/aoc-2022-jt.png "AOC 2022 PHP by James Thatcher")
+
 ### Commands
 _Note: checkout the code then run `make run`. The docker and composer libraries will auto install._
 
