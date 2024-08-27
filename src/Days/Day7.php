@@ -67,6 +67,7 @@ class Day7 extends Day
      * Builds a filesystem representation based on the given input collection.
      *
      * @param Collection $io the input collection containing commands and their output
+     *
      * @return Collection The filesystem representation as an associative array wrapped in a collection.
      *
      * e.g. ['/' => ['size' => 1000], '/a' => ['size' => 600], '/b' => ['size' => 400]]
@@ -127,9 +128,10 @@ class Day7 extends Day
      */
     protected function calculateSize(array &$fs, string $currentDir): int
     {
-        if (isset($fs[$currentDir]['size'])) {
+        if (null !== $fs[$currentDir]['size']) {
             return $fs[$currentDir]['size'];
         }
+
         $size = collect($fs[$currentDir]['files'])->sum();
         foreach ($fs[$currentDir]['dirs'] as $dir) {
             $subDir = '/' === $currentDir ? "/$dir" : "$currentDir/$dir";

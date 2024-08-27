@@ -17,9 +17,6 @@ class Day8 extends Day
         35390
         eof;
 
-    /**
-     *
-     */
     public function solvePart1(mixed $input): int|string|null
     {
         $input = $this->parseInput($input);
@@ -27,9 +24,6 @@ class Day8 extends Day
         return '';
     }
 
-    /**
-     *
-     */
     public function solvePart2(mixed $input): int|string|null
     {
         $input = $this->parseInput($input);

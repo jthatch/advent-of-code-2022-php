@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App;
 
 use App\Contracts\Day;
-use App\Exceptions\DayClassNotFoundException;
-use App\Exceptions\DayInputNotFoundException;
+use App\Runner\Exceptions\DayClassNotFoundException;
+use App\Runner\Exceptions\DayInputNotFoundException;
 
 class DayFactory
 {
