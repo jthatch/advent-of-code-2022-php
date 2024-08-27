@@ -118,7 +118,7 @@ class Day7 extends Day
     }
 
     /**
-     * Calculates the total size of a directory and all its subdirectories in a given filesystem.
+     * Calculates the total size of a directory and all its subdirectories.
      *
      * @param array  $fs         a reference to the filesystem array
      * @param string $currentDir the path of the current directory
