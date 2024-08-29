@@ -39,10 +39,13 @@ class Day8 extends Day
                         $newY        = $y + $pos[0];
                         $newX        = $x + $pos[1];
                         $locAdjacent = $input[$y + $pos[0]][$x + $pos[1]] ?? null;
+                        if (null === $locAdjacent) {
+                            return true;
+                        }
                         // todo solve this
                         printf("y: %s x: %s ay: %s ax: %s\n", $y, $x, $y + $pos[0], $x + $pos[1]);
-
-                        return null !== $locAdjacent && $location >= $locAdjacent;
+                        // 22 but needs to be 21
+                        return $location < $locAdjacent;
                     }
                 ))) {
                     $key           = sprintf('%s-%s', $y, $x);
