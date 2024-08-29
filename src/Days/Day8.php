@@ -32,7 +32,8 @@ class Day8 extends Day
                 $key      = sprintf('%s-%s', $y, $x);
                 printf("key: %s location: %s\n", $key, $location);
 
-                // loop over our adjacent positions, if none are bigger then we've found a visible tree
+                // A tree is visible if all of the other trees between it and an edge of the grid are shorter than it.
+                // Only consider trees in the same row or column; that is, only look up, down, left, or right from any given tree.
                 if (!empty(array_filter(
                     $adjacent,
                     function (array $pos) use ($y, $x, $input, $location): bool {
@@ -45,7 +46,37 @@ class Day8 extends Day
                         // todo solve this
                         printf("y: %s x: %s ay: %s ax: %s\n", $y, $x, $y + $pos[0], $x + $pos[1]);
                         // 22 but needs to be 21
-                        return $location < $locAdjacent;
+                        /**
+                         * 2^ array:22 [
+                         * "0-0" => "3"
+                         * "0-1" => "0"
+                         * "0-2" => "3"
+                         * "0-3" => "7"
+                         * "0-4" => "3"
+                         * "1-0" => "2"
+                         *
+                         * "1-1" => "5"
+                         * "1-2" => "5"
+
+                         * "1-4" => "2"
+                         *
+                         * "2-0" => "6"
+                         *
+                         * "2-1" => "5"
+                         * "2-3" => "3"
+                         * "2-4" => "2"
+                         * "3-0" => "3"
+                         * "3-2" => "5"
+                         * "3-3" => "4"
+                         * "3-4" => "9"
+                         * "4-0" => "3"
+                         * "4-1" => "5"
+                         * "4-2" => "3"
+                         * "4-3" => "9"
+                         * "4-4" => "0"
+                         * ]
+ */
+                        return $location > $locAdjacent;
                     }
                 ))) {
                     $key           = sprintf('%s-%s', $y, $x);
