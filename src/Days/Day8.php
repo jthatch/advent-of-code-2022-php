@@ -80,6 +80,9 @@ class Day8 extends Day
         return count($visible);
     }
 
+    /**
+     * Consider each tree on your map. What is the highest scenic score possible for any tree?
+     */
     public function solvePart2(mixed $input): int|string|null
     {
         $input = $this
