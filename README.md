@@ -4,7 +4,7 @@ The solutions to [advent of code 2022](https://adventofcode.com/2022), solved us
 ### Solutions 🥳🎉
 > 🎄 [Day 1](/src/Days/Day1.php) 🎅 [Day 2](/src/Days/Day2.php) ☃️ [Day 3](/src/Days/Day3.php) 
 > 🦌 [Day 4](/src/Days/Day4.php) 🍪 [Day 5](/src/Days/Day5.php) 🥛 [Day 6](/src/Days/Day6.php) 
-> 🧦 [Day 7](/src/Days/Day7.php) 🎁 [Day 8](/src/Days/Day8.php)
+> 🧦 [Day 7](/src/Days/Day7.php) 🎁 [Day 8](/src/Days/Day8.php) ⛄ [Day 9](/src/Days/Day9.php)
 ### About
 My attempts at tacking the awesome challenges at [Advent of Code 2022](https://adventofcode.com/2022/day/1) using PHP 8.2.
 
