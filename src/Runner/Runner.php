@@ -9,68 +9,89 @@ use App\DayFactory;
 
 class Runner implements RunnerInterface
 {
-    protected ?array $days;
-
-    public function __construct(protected Options $options, protected DayFactory $factory = new DayFactory())
-    {
-        $this->days = $this->options->days;
+    public function __construct(
+        protected Options $options,
+        protected DayFactory $factory = new DayFactory(),
+        protected ?array $days = null
+    ) {
+        $this->days ??= $this->options->days;
     }
 
     public function run(): void
     {
-        if ($this->options->wantsHelp) {
-            $this->showHelp();
+        match (true) {
+            $this->options->wantsHelp => $this->showHelp(),
+            default                   => $this->runDays(),
+        };
+    }
 
-            return;
-        }
-
+    protected function runDays(): void
+    {
         $this->showStart();
         $totalStartTime = microtime(true);
 
-        /** @var Day $day */
         foreach ($this->dayGenerator() as $day) {
-            // run examples first
-            if ($this->options->withExamples) {
-                printf("\e[1;4m%s Examples\e[0m\n", $day->day());
-                if (null === $this->options->parts || in_array(1, $this->options->parts ?? [], true)) {
-                    $startTime = microtime(true);
-                    printf("    Part1 Example \e[1;32m%s\e[0m\n", $day->solvePart1($day->getExample1()));
-                    $this->report($startTime);
-                }
-
-                if (null === $this->options->parts || in_array(2, $this->options->parts ?? [], true)) {
-                    $startTime = microtime(true);
-                    printf("    Part2 Example \e[1;32m%s\e[0m\n", $day->solvePart2($day->getExample2()));
-                    $this->report($startTime);
-                }
-            }
-
-            printf("\e[1;4m%s\e[0m\n", $day->day());
-            if (null === $this->options->parts || in_array(1, $this->options->parts ?? [], true)) {
-                $startTime = microtime(true);
-                printf("    Part1 \e[1;32m%s\e[0m\n", $day->solvePart1($day->input));
-                $this->report($startTime);
-            }
-
-            if (null === $this->options->parts || in_array(2, $this->options->parts ?? [], true)) {
-                $startTime = microtime(true);
-                printf("    Part2 \e[1;32m%s\e[0m\n", $day->solvePart2($day->input));
-                $this->report($startTime);
-            }
+            $this->runDay($day);
         }
 
-        printf(<<<eof
-        \e[32m---------------------------------------------
-        |\e[0m Total time: \e[2m%.5fs\e[0m                     \e[32m |
-        ---------------------------------------------\e[0m
-        
-        eof, microtime(true) - $totalStartTime);
+        $this->showTotalTime($totalStartTime);
+    }
+
+    protected function runDay(Day $day): void
+    {
+        $this->options->withExamples && $this->runExamples($day);
+
+        printf("\e[1;4m%s\e[0m\n", $day->day());
+        foreach ([1, 2] as $part) {
+            $this->shouldRunPart($part) && $this->runPart($day, $part);
+        }
+    }
+
+    protected function runExamples(Day $day): void
+    {
+        printf("\e[1;4m%s Examples\e[0m\n", $day->day());
+        foreach ([1, 2] as $part) {
+            $this->shouldRunPart($part) && $this->runPartExamples($part, $day);
+        }
+    }
+
+    protected function runPart(Day $day, int $part): void
+    {
+        $startTime = microtime(true);
+        $method    = "solvePart$part";
+        printf("    Part$part \e[1;32m%s\e[0m\n", $day->$method($day->input));
+        $this->report($startTime);
+    }
+
+    protected function runPartExamples(int $part, Day $day): void
+    {
+        $startTime     = microtime(true);
+        $exampleMethod = "getExample$part";
+        $solveMethod   = "solvePart$part";
+        $examples      = $day->$exampleMethod();
+
+        is_array($examples)
+            ? $this->runMultipleExamples($part, $day, $examples, $solveMethod)
+            : $this->runSingleExample($part, $day, $examples, $solveMethod);
+
+        $this->report($startTime);
+    }
+
+    protected function runMultipleExamples(int $part, Day $day, array $examples, string $solveMethod): void
+    {
+        foreach ($examples as $i => $example) {
+            $partLetter = chr(97 + $i);
+            printf("    Part%d%s \e[1;32m%s\e[0m\n", $part, $partLetter, $day->$solveMethod($example));
+        }
+    }
+
+    protected function runSingleExample(int $part, Day $day, mixed $example, string $solveMethod): void
+    {
+        printf("    Part%d Example \e[1;32m%s\e[0m\n", $part, $day->$solveMethod($example));
     }
 
     protected function dayGenerator(): \Generator
     {
-        // If days are passed on the command line, e.g. `php run.php 1` or `php run.php 1-5,6` our generator returns those days,
-        // otherwise returns all days that have been solved.
         return null !== $this->days
             ? (function () {
                 while (!empty($this->days)) {
@@ -83,7 +104,7 @@ class Runner implements RunnerInterface
     protected function showStart(): void
     {
         printf(
-            <<<eof
+            <<<EOF
             \e[32m---------------------------------------------
             |\e[0m Advent of Code 2022 PHP - James Thatcher\e[32m  |
             |\e[0m                                         \e[32m  |
@@ -92,7 +113,7 @@ class Runner implements RunnerInterface
             |\e[0;37m With Examples: \e[2;37m%-25s \e[0;32m |
             ---------------------------------------------\e[0m
 
-            eof,
+            EOF,
             null === $this->options->days ? 'all' : implode(',', $this->options->days),
             null === $this->options->parts ? '1,2' : implode(',', $this->options->parts),
             $this->options->withExamples ? 'yes' : 'no'
@@ -101,8 +122,7 @@ class Runner implements RunnerInterface
 
     protected function showHelp(): void
     {
-        printf(
-            <<<eof
+        echo <<<EOF
             Advent of Code 2022 PHP runner.
             
             Usage:
@@ -112,48 +132,57 @@ class Runner implements RunnerInterface
                 -e,--examples             Runs the examples
                 -h,--help                 This help message
 
-            eof
-        );
+            EOF;
     }
 
     protected function report(float $startTime): void
     {
-        $time           = microtime(true) - $startTime;
-        $mem            = memory_get_usage();
-        $memPeak        = memory_get_peak_usage();
-        $timeColourised = match (true) {
-            $time >= 0.75 => sprintf("\e[0;31m%.5fs\e[0;2m", $time),
-            $time >= 0.1  => sprintf("\e[1;31m%.5fs\e[0;2m", $time),
-            default       => sprintf('%.5fs', $time),
-        };
-        $memColourised = match (true) {
-            $mem >= 1000000 => sprintf("\e[0;31m% 5s\e[0;2m", str_pad($this->humanReadableBytes($mem), 5)),
-            $mem >= 750000  => sprintf("\e[1;31m% 5s\e[0;2m", str_pad($this->humanReadableBytes($mem), 5)),
-            default         => sprintf('% 5s', str_pad($this->humanReadableBytes($mem), 5)),
-        };
-
-        $memPeakColourised = match (true) {
-            $memPeak >= 1e+8 => sprintf("\e[0;31m% 7s\e[0;2m", str_pad($this->humanReadableBytes($memPeak), 5)),
-            $memPeak >= 5e+7 => sprintf("\e[1;31m% 7s\e[0;2m", str_pad($this->humanReadableBytes($memPeak), 5)),
-            default          => sprintf('% 7s', str_pad($this->humanReadableBytes($memPeak), 5)),
-        };
+        $time    = microtime(true) - $startTime;
+        $mem     = memory_get_usage();
+        $memPeak = memory_get_peak_usage();
 
         printf(
             "      \e[2mMem[%s] Peak[%s] Time[%s]\e[0m\n",
-            $memColourised,
-            $memPeakColourised,
-            $timeColourised,
+            $this->colorise($this->humanReadableBytes($mem), $mem, 750000, 1000000),
+            $this->colorise($this->humanReadableBytes($memPeak), $memPeak, 5e+7, 1e+8),
+            $this->colorise(sprintf('%.5fs', $time), $time, 0.1, 0.75),
         );
     }
 
-    protected function humanReadableBytes(int $bytes, int $precision = null): string
+    protected function colorise(string $value, float|int $metric, float|int $warnThreshold, float|int $errorThreshold): string
     {
-        $units          = ['b', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
-        $precisionUnits = [0, 0, 1, 2, 2, 3, 3, 4, 4];
+        return match (true) {
+            $metric >= $errorThreshold => sprintf("\e[0;31m%s\e[0;2m", $value),
+            $metric >= $warnThreshold  => sprintf("\e[1;31m%s\e[0;2m", $value),
+            default                    => $value,
+        };
+    }
 
-        return round(
-            $bytes / (1024 ** ($i = floor(log($bytes, 1024)))),
-            $precision ?? $precisionUnits[$i]
-        ).$units[$i];
+    protected function humanReadableBytes(int $bytes): string
+    {
+        $units = ['b', 'kb', 'mb', 'gb', 'tb', 'pb', 'eb', 'zb', 'yb'];
+        $i     = floor(log($bytes, 1024));
+
+        return sprintf(
+            '%.*f%s',
+            [0, 0, 1, 2, 2, 3, 3, 4, 4][$i],
+            $bytes / (1024 ** $i),
+            $units[$i]
+        );
+    }
+
+    protected function shouldRunPart(int $part): bool
+    {
+        return null === $this->options->parts || in_array($part, $this->options->parts, true);
+    }
+
+    protected function showTotalTime(float $totalStartTime): void
+    {
+        printf(<<<EOF
+        \e[32m---------------------------------------------
+        |\e[0m Total time: \e[2m%.5fs\e[0m                     \e[32m |
+        ---------------------------------------------\e[0m
+        
+        EOF, microtime(true) - $totalStartTime);
     }
 }

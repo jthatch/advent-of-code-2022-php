@@ -7,67 +7,191 @@ namespace App\Days;
 use App\Contracts\Day;
 use Illuminate\Support\Collection;
 
-class Day9 extends Day
+class Day10 extends Day
 {
-    public const EXAMPLE1 = <<<eof
-        R 4
-        U 4
-        L 3
-        D 1
-        R 4
-        D 1
-        L 5
-        R 2
+    // public const EXAMPLE1  = [self::EXAMPLE1A, self::EXAMPLE1B];
+    public const EXAMPLE1A = <<<eof
+        noop
+        addx 3
+        addx -5
+        eof;
+    public const EXAMPLE1B = <<<eof
+        addx 15
+        addx -11
+        addx 6
+        addx -3
+        addx 5
+        addx -1
+        addx -8
+        addx 13
+        addx 4
+        noop
+        addx -1
+        addx 5
+        addx -1
+        addx 5
+        addx -1
+        addx 5
+        addx -1
+        addx 5
+        addx -1
+        addx -35
+        addx 1
+        addx 24
+        addx -19
+        addx 1
+        addx 16
+        addx -11
+        noop
+        noop
+        addx 21
+        addx -15
+        noop
+        noop
+        addx -3
+        addx 9
+        addx 1
+        addx -3
+        addx 8
+        addx 1
+        addx 5
+        noop
+        noop
+        noop
+        noop
+        noop
+        addx -36
+        noop
+        addx 1
+        addx 7
+        noop
+        noop
+        noop
+        addx 2
+        addx 6
+        noop
+        noop
+        noop
+        noop
+        noop
+        addx 1
+        noop
+        noop
+        addx 7
+        addx 1
+        noop
+        addx -13
+        addx 13
+        addx 7
+        noop
+        addx 1
+        addx -33
+        noop
+        noop
+        noop
+        addx 2
+        noop
+        noop
+        noop
+        addx 8
+        noop
+        addx -1
+        addx 2
+        addx 1
+        noop
+        addx 17
+        addx -9
+        addx 1
+        addx 1
+        addx -3
+        addx 11
+        noop
+        noop
+        addx 1
+        noop
+        addx 1
+        noop
+        noop
+        addx -13
+        addx -19
+        addx 1
+        addx 3
+        addx 26
+        addx -30
+        addx 12
+        addx -1
+        addx 3
+        addx 1
+        noop
+        noop
+        noop
+        addx -9
+        addx 18
+        addx 1
+        addx 2
+        noop
+        noop
+        addx 9
+        noop
+        noop
+        noop
+        addx -1
+        addx 2
+        addx -37
+        addx 1
+        addx 3
+        noop
+        addx 15
+        addx -21
+        addx 22
+        addx -6
+        addx 1
+        noop
+        addx 2
+        addx 1
+        noop
+        addx -10
+        noop
+        noop
+        addx 20
+        addx 1
+        addx 2
+        addx 2
+        addx -6
+        addx -11
+        noop
+        noop
+        noop
         eof;
 
-    public const EXAMPLE2 = <<<eof
-        R 5
-        U 8
-        L 8
-        D 3
-        R 17
-        D 10
-        L 25
-        U 20
-        eof;
+    public const EXAMPLE1 = self::EXAMPLE1B;
 
-    // directions we can travel
-    private array $directions = [
-        'U' => [-1, 0],
-        'R' => [0, 1],
-        'D' => [1, 0],
-        'L' => [0, -1],
-    ];
+    // private array $cycles = [3, 5];
+    private array $cycles = [20, 60, 100, 140, 180, 220];
 
     /**
-     * How many positions does the tail of the rope visit at least once?
+     * Find the signal strength during the 20th, 60th, 100th, 140th, 180th, and 220th cycles. What is the sum of these six signal strengths?
      */
     public function solvePart1(mixed $input): int|string|null
     {
-        $input = $this
-            ->parseInput($input)
-            ->toArray();
+        $x        = 1;
+        $cycle    = 0;
+        $strength = [];
 
-        $visited = [];
-        $head    = [0, 0];
-        $tail    = [0, 0];
-        foreach ($input as [$direction, $amount]) {
-            $pos = $this->directions[$direction];
-            while ($amount-- > 0) {
-                $head[0] += $pos[0];
-                $head[1] += $pos[1];
-
-                // now we gotta calculate where to move the tail based on the following rules:
-                // If the head is ever two steps directly up, down, left, or right from the tail, the tail must also move one step in that direction so it remains close enough
-                // Otherwise, if the head and tail aren't touching and aren't in the same row or column, the tail always moves one step diagonally to keep up
-                $tail = $this->moveTail($head, $tail);
-
-                $key           = sprintf('%s-%s', $tail[0], $tail[1]);
-                $visited[$key] = 'T';
+        foreach ($this->parseInput($input)->toArray() as [$instruction, $value]) {
+            ++$cycle;
+            if (in_array($cycle, $this->cycles, true)) {
+                $strength[$cycle] = $x * $cycle;
+            } if ('addx' === $instruction) {
+                ++$cycle;
+                if (in_array($cycle, $this->cycles, true)) {
+                    $strength[$cycle] = $x * $cycle;
+                }
             }
+            $x += $value;
         }
 
-        return count($visited);
+        return array_sum($strength);
     }
 
     /**
@@ -75,58 +199,38 @@ class Day9 extends Day
      */
     public function solvePart2(mixed $input): int|string|null
     {
+        $x     = 1;
         $input = $this
             ->parseInput($input)
-            ->toArray();
+            ->reduce(function (array $register, array $program) use (&$x) {
+                [$instruction, $value] = $program;
 
-        $visited = [];
-        $knots   = array_fill(0, 10, [0, 0]);
-        foreach ($input as [$direction, $amount]) {
-            $pos = $this->directions[$direction];
-            while ($amount-- > 0) {
-                // move the head once in the direction
-                $knots[0][0] += $pos[0];
-                $knots[0][1] += $pos[1];
+                // capture x and cycle at the start/during the command
+                [$x, $cycle, $strength ] = $register;
 
-                foreach ($knots as $id => &$tail) {
-                    // skip the head
-                    if (0 === $id) {
-                        continue;
+                $isNoop = 'noop' === $instruction;
+
+                // printf("%d. (%s %d) x=%d\n", $cycle, $instruction, $value, $x);
+
+                for ($i = 0; $i < ($isNoop ? 1 : 2); ++$i) {
+                    if (in_array($cycle, $this->cycles, true)) {
+                        // add the signal strength
+                        $strength[$cycle] = $x * $cycle;
                     }
-                    $head = &$knots[$id - 1];
-                    $tail = $this->moveTail($head, $tail);
+                    // printf("%s %d.%d x=%d\n", $isNoop ? ' ' : '  ', $cycle, $i, $x);
+                    ++$cycle;
                 }
-                unset($tail);
-                $key           = sprintf('%s-%s', $knots[9][0], $knots[9][1]);
-                $visited[$key] = $id;
-            }
-        }
+                if (!$isNoop) {
+                    $x += $value; // increment x
+                }
 
-        return count($visited);
-    }
+                return [$x, $cycle, $strength];
+            }, [1, 1, []]); // [x, cycle, strength]
 
-    protected function moveTail(array $head, array $tail): array
-    {
-        [$headX, $headY] = $head;
-        [$tailX, $tailY] = $tail;
-        if (2 === abs($headX - $tailX) + abs($headY - $tailY)) {
-            // Head is two steps directly up, down, left, or right from the tail
-            // Move the tail one step in the same direction as the head
-            match (true) {
-                2  === $headX  - $tailX  => ++$tail[0],
-                -2 === $headX - $tailX => --$tail[0],
-                2  === $headY  - $tailY  => ++$tail[1],
-                -2 === $headY - $tailY => --$tail[1],
-                default                => null
-            };
-        } elseif ($headX !== $tailX && $headY !== $tailY) {
-            // Head and tail aren't touching and aren't in the same row or column
-            // Move the tail one step diagonally to keep up
-            $tail[0] += $headX <=> $tailX;
-            $tail[1] += $headY <=> $tailY;
-        }
+        // dump(['signals' => $input[2]]);
+        // dump(['signals' => $input[2], 'x' => $x, 'sum' => collect($input[2])->sum()]);
 
-        return $tail;
+        return collect($input[2])->sum();
     }
 
     protected function parseInput(mixed $input): Collection
@@ -134,11 +238,12 @@ class Day9 extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            ->map(fn ($line) => explode(' ', $line));
-    }
+            ->map(function (string $line) {
+                $elements    = explode(' ', $line);
+                $elements[1] = (int) ($elements[1] ?? 0);
 
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE2;
+                return $elements;
+            })
+        ;
     }
 }

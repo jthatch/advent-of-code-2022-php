@@ -109,16 +109,15 @@ class Day9 extends Day
     {
         [$headX, $headY] = $head;
         [$tailX, $tailY] = $tail;
-        // printf("head: %d,%d tail: %d,%d\n", $headX, $headY, $tailX, $tailY);
         if (2 === abs($headX - $tailX) + abs($headY - $tailY)) {
             // Head is two steps directly up, down, left, or right from the tail
             // Move the tail one step in the same direction as the head
             match (true) {
-                2  === $headX  - $tailX  => ++$tail[0],
-                -2 === $headX - $tailX => --$tail[0],
-                2  === $headY  - $tailY  => ++$tail[1],
-                -2 === $headY - $tailY => --$tail[1],
-                default                => null
+                2  === $headX - $tailX => ++$tail[0],
+                -2 === $headX - $tailX  => --$tail[0],
+                2  === $headY - $tailY => ++$tail[1],
+                -2 === $headY - $tailY  => --$tail[1],
+                default                 => null
             };
         } elseif ($headX !== $tailX && $headY !== $tailY) {
             // Head and tail aren't touching and aren't in the same row or column
