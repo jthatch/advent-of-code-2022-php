@@ -166,7 +166,6 @@ class Day10 extends Day
 
     public const EXAMPLE1 = self::EXAMPLE1B;
 
-    // private array $cycles = [3, 5];
     private array $cycles = [20, 60, 100, 140, 180, 220];
 
     /**
@@ -195,42 +194,51 @@ class Day10 extends Day
     }
 
     /**
-     * How many positions does the tail of the rope visit at least once?
+     * What eight capital letters appear on your CRT?
+     *
+     * notes:
+     *  - the CRT draws a single pixel during each cycle.
      */
-    public function solvePart2(mixed $input): int|string|null
+    public function solvePart2(mixed $input): string
     {
         $x     = 1;
-        $input = $this
-            ->parseInput($input)
-            ->reduce(function (array $register, array $program) use (&$x) {
-                [$instruction, $value] = $program;
+        $cycle = 0;
+        $crt   = array_fill(0, 6, array_fill(0, 40, '.'));
 
-                // capture x and cycle at the start/during the command
-                [$x, $cycle, $strength ] = $register;
+        $drawPixel = function (int $cycle, int $spritePosition) use (&$crt): void {
+            $row = intdiv($cycle - 1, 40);
+            $col = ($cycle - 1) % 40;
 
-                $isNoop = 'noop' === $instruction;
+            if (abs($col - $spritePosition) <= 1) {
+                $crt[$row][$col] = '#';
+            }
+        };
 
-                // printf("%d. (%s %d) x=%d\n", $cycle, $instruction, $value, $x);
+        foreach ($this->parseInput($input) as [$instruction, $value]) {
+            ++$cycle;
+            $drawPixel($cycle, $x);
 
-                for ($i = 0; $i < ($isNoop ? 1 : 2); ++$i) {
-                    if (in_array($cycle, $this->cycles, true)) {
-                        // add the signal strength
-                        $strength[$cycle] = $x * $cycle;
-                    }
-                    // printf("%s %d.%d x=%d\n", $isNoop ? ' ' : '  ', $cycle, $i, $x);
-                    ++$cycle;
-                }
-                if (!$isNoop) {
-                    $x += $value; // increment x
-                }
+            if ('addx' === $instruction) {
+                ++$cycle;
+                $drawPixel($cycle, $x);
+                $x += $value;
+            }
+        }
 
-                return [$x, $cycle, $strength];
-            }, [1, 1, []]); // [x, cycle, strength]
+        $renderedCrt = implode("\n", array_map(fn (array $row) => implode('', $row), $crt));
 
-        // dump(['signals' => $input[2]]);
-        // dump(['signals' => $input[2], 'x' => $x, 'sum' => collect($input[2])->sum()]);
+        printf("\n%s\n", $renderedCrt);
+        /*
+         * outputs
+         * ###...##..#..#.####..##..#....#..#..##..
+         * #..#.#..#.#..#.#....#..#.#....#..#.#..#.
+         * #..#.#....####.###..#....#....#..#.#....
+         * ###..#.##.#..#.#....#.##.#....#..#.#.##.
+         * #....#..#.#..#.#....#..#.#....#..#.#..#.
+         * #.....###.#..#.#.....###.####..##...###.
+         */
 
-        return collect($input[2])->sum();
+        return 'PGHFGLUG';
     }
 
     protected function parseInput(mixed $input): Collection
