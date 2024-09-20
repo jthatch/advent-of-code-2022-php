@@ -104,7 +104,7 @@ class Runner implements RunnerInterface
     protected function showStart(): void
     {
         printf(
-            <<<EOF
+            <<<eof
             \e[32m---------------------------------------------
             |\e[0m Advent of Code 2022 PHP - James Thatcher\e[32m  |
             |\e[0m                                         \e[32m  |
@@ -113,7 +113,7 @@ class Runner implements RunnerInterface
             |\e[0;37m With Examples: \e[2;37m%-25s \e[0;32m |
             ---------------------------------------------\e[0m
 
-            EOF,
+            eof,
             null === $this->options->days ? 'all' : implode(',', $this->options->days),
             null === $this->options->parts ? '1,2' : implode(',', $this->options->parts),
             $this->options->withExamples ? 'yes' : 'no'
@@ -122,7 +122,7 @@ class Runner implements RunnerInterface
 
     protected function showHelp(): void
     {
-        echo <<<EOF
+        echo <<<eof
             Advent of Code 2022 PHP runner.
             
             Usage:
@@ -132,7 +132,7 @@ class Runner implements RunnerInterface
                 -e,--examples             Runs the examples
                 -h,--help                 This help message
 
-            EOF;
+            eof;
     }
 
     protected function report(float $startTime): void

@@ -8,7 +8,9 @@ use Illuminate\Support\Collection;
 
 abstract class Day implements DayInterface
 {
+    /** string|array EXAMPLE1 */
     public const EXAMPLE1 = '';
+    /** string|array EXAMPLE2 */
     public const EXAMPLE2 = '';
 
     /**
