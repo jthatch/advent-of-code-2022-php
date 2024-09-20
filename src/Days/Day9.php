@@ -114,10 +114,10 @@ class Day9 extends Day
             // Move the tail one step in the same direction as the head
             match (true) {
                 2  === $headX - $tailX => ++$tail[0],
-                -2 === $headX - $tailX  => --$tail[0],
+                -2 === $headX - $tailX => --$tail[0],
                 2  === $headY - $tailY => ++$tail[1],
-                -2 === $headY - $tailY  => --$tail[1],
-                default                 => null
+                -2 === $headY - $tailY => --$tail[1],
+                default                => null
             };
         } elseif ($headX !== $tailX && $headY !== $tailY) {
             // Head and tail aren't touching and aren't in the same row or column

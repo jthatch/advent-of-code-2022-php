@@ -227,7 +227,7 @@ class Day10 extends Day
 
         $renderedCrt = implode("\n", array_map(fn (array $row) => implode('', $row), $crt));
 
-        printf("\n%s\n", $renderedCrt);
+        printf("%s\n", $renderedCrt);
         /*
          * outputs
          * ###...##..#..#.####..##..#....#..#..##..

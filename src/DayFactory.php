@@ -7,6 +7,9 @@ namespace App;
 use App\Contracts\Day;
 use App\Runner\Exceptions\DayClassNotFoundException;
 use App\Runner\Exceptions\DayInputNotFoundException;
+use Error;
+use Exception;
+use Generator;
 
 class DayFactory
 {
@@ -33,13 +36,13 @@ class DayFactory
         return new $dayClassName($dayInput);
     }
 
-    public function allAvailableDays(): \Generator
+    public function allAvailableDays(): Generator
     {
         foreach (range(1, static::MAX_DAYS) as $dayNumber) {
             try {
                 $day = $this->create($dayNumber);
                 yield $day;
-            } catch (\Exception|\Error) {
+            } catch (Exception|Error) {
                 break; // ignore days we haven't solved yet
             }
         }

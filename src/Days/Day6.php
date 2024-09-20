@@ -58,6 +58,6 @@ class Day6 extends Day
     {
         $input = is_array($input) ? $input : explode("\n", $input);
 
-        return collect($input)->flatMap(fn ($line) => str_split($line));
+        return collect($input)->flatMap(fn ($line) => mb_str_split($line));
     }
 }

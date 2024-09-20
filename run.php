@@ -7,7 +7,7 @@
  * -p,--part PATTERN         Only run parts that match pattern (range or comma-separated list)
  * -e,--examples             Runs the examples
  * -h,--help                 This help message
-
+ *
  *  php run.php --day=[day] --part=[part] --examples
  *  [day]  = optional - The day(s) to run. Can be a range (1-10) or comma-separated (1,2,5) including combination of both.
  *  [part] = optional - The part to run

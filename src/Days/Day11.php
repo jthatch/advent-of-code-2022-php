@@ -6,6 +6,7 @@ namespace App\Days;
 
 use App\Contracts\Day;
 use Illuminate\Support\Collection;
+use RuntimeException;
 
 class Day11 extends Day
 {
@@ -52,7 +53,6 @@ class Day11 extends Day
                 $inspections[$id] += count($monkey['items']);
                 foreach ($monkey['items'] as $item) {
                     $worry   = intdiv($this->performOperation($item, $monkey['operation']), 3);
-                    $divBy3  = 0 === $worry % $monkey['test'] ? 'true' : 'false';
                     $throwTo = $monkey[0 === $worry % $monkey['test'] ? 'true' : 'false'];
                     // if worry is divisible by 3, throw to monkey marked as 'true', otherwise monkey marked as 'false'
                     // pass the item to the monkey
@@ -87,7 +87,6 @@ class Day11 extends Day
                 foreach ($monkey['items'] as $item) {
                     $worry = (int) floor($this->performOperation($item, $monkey['operation']));
                     $worry %= $lcm;
-                    $divBy3  = 0 === $worry % $monkey['test'] ? 'true' : 'false';
                     $throwTo = $monkey[0 === $worry % $monkey['test'] ? 'true' : 'false'];
 
                     $monkeys[$throwTo]['items'][] = $worry;
@@ -146,7 +145,7 @@ class Day11 extends Day
                 if (
                     (null === $idMatch || 2 !== count($idMatch)) || (null === $operationMatch || 3 !== count($operationMatch)) || (null === $testMatch || 2 !== count($testMatch)) || (null === $trueMatch || 2 !== count($trueMatch)) || (null === $falseMatch || 2 !== count($falseMatch))
                 ) {
-                    throw new \RuntimeException('invalid parsing of puzzle input');
+                    throw new RuntimeException('invalid parsing of puzzle input');
                 }
 
                 return [
@@ -156,9 +155,9 @@ class Day11 extends Day
                         'symbol' => $operationMatch[1],
                         'target' => is_numeric($operationMatch[2]) ? (int) $operationMatch[2] : $operationMatch[2],
                     ],
-                    'test'      => (int) $testMatch[1],
-                    'true'      => (int) $trueMatch[1],
-                    'false'     => (int) $falseMatch[1],
+                    'test'  => (int) $testMatch[1],
+                    'true'  => (int) $trueMatch[1],
+                    'false' => (int) $falseMatch[1],
                 ];
             });
     }

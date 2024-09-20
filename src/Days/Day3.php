@@ -29,19 +29,19 @@ class Day3 extends Day
         return $this->parseInput($input)
             // split the characters in half for each compartment in the rucksack
             ->map(function (string $line) {
-                $halfLength = intdiv(strlen($line), 2);
+                $halfLength = intdiv(mb_strlen($line), 2);
 
                 return [
-                    substr($line, 0, $halfLength),
-                    substr($line, $halfLength),
+                    mb_substr($line, 0, $halfLength),
+                    mb_substr($line, $halfLength),
                 ];
             })
             // find common characters
             ->map(function (array $parts) {
                 [$part1, $part2] = $parts;
                 $commonChars     = array_intersect(
-                    str_split($part1),
-                    str_split($part2)
+                    mb_str_split($part1),
+                    mb_str_split($part2)
                 );
 
                 return array_unique($commonChars);
@@ -69,9 +69,9 @@ class Day3 extends Day
                 [$first, $second, $third] = $chunk->values();
 
                 return array_unique(array_intersect(
-                    str_split($first),
-                    str_split($second),
-                    str_split($third),
+                    mb_str_split($first),
+                    mb_str_split($second),
+                    mb_str_split($third),
                 ));
             })
             // convert to a priority

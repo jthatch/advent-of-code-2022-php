@@ -45,9 +45,9 @@ class Day1 extends Day
         $input = $this->parseInput($input);
 
         return $input->map(fn ($chunk) => $chunk->sum())
-        ->sortDesc()
-        ->take(3)
-        ->sum();
+            ->sortDesc()
+            ->take(3)
+            ->sum();
     }
 
     protected function parseInput(mixed $input): Collection

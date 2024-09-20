@@ -105,8 +105,8 @@ class Day5 extends Day
         // create an empty array keyed by the stack columns 1,2,3 etc
         $stacks = array_map(fn () => [], array_flip(preg_split("/\s+/", trim((string) $stackLine))));
         // loop over each remaining diagram line, adding the crates to the correct stack column
-        $rawDiagram->each(function ($line) use (&$stacks) {
-            $crates = collect(str_split($line, 4))
+        $rawDiagram->each(function ($line) use (&$stacks): void {
+            $crates = collect(mb_str_split($line, 4))
                 ->map(fn ($char) => trim(str_replace(['[', ']'], '', $char)));
             foreach ($stacks as &$stack) {
                 $crate = $crates->shift();

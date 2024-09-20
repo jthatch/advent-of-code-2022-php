@@ -103,6 +103,9 @@ cleanup: ## remove all docker images
 cs-fix: ## run php-cs-fixer
 	$(DOCKER_RUN) $(image-name) composer --no-cache run cs-fixer
 
+pint: ## run php-cs-fixer
+	$(DOCKER_RUN) $(image-name) composer --no-cache run pint
+
 phpstan: ## run phpstan
 	$(DOCKER_RUN) $(image-name) composer run phpstan
 
@@ -117,7 +120,14 @@ endif
 define DAY_TEMPLATE
 <?php\n\ndeclare(strict_types=1);\n\nnamespace App;\n\nuse App\Contracts\DayBehaviour;\n\nclass Day$(nextDay) extends DayBehaviour\n{\n    public function solvePart1(): ?int\n    {\n        // TODO: Implement solvePart1() method.\n        return null;\n    }\n\n    public function solvePart2(): ?int\n    {\n        // TODO: Implement solvePart2() method.\n        return null;\n    }\n}\n
 endef
-next: ## Generates the next days PHP files
+next:
+	@echo "Creating next day's file..."
+	@next_day=$$(ls src/Days | grep -oE 'Day[0-9]+' | sort -V | tail -n 1 | sed 's/Day//'); \
+	next_day=$$(( $$next_day + 1 )); \
+	sed "s/DayX/Day$$next_day/g" stub/DayX.php.stub > src/Days/Day$$next_day.php; \
+	echo "Created src/Days/Day$$next_day.php"
+	make get-input
+next2: ## Generates the next days PHP files
 ifneq ("$(wildcard src/Day$(nextDay).php)","")
 	@echo -e "The file: src/Day$(nextDay).php already exists...\n"
 else

@@ -97,11 +97,11 @@ class Day7 extends Day
                     'dirs'  => [],
                     'size'  => null,
                 ];
-            // process list
+                // process list
             } elseif (str_starts_with($chunk[0] ?? '', '$ ls')) {
                 // remove the command and extract files and folders
                 $chunk->shift();
-                $chunk->map(function ($line) use (&$fs, &$currentDir) {
+                $chunk->map(function ($line) use (&$fs, &$currentDir): void {
                     [$typeOrSize, $name] = explode(' ', $line);
                     if ('dir' === $typeOrSize) {
                         $fs[$currentDir]['dirs'][] = $name;
@@ -134,7 +134,7 @@ class Day7 extends Day
 
         $size = collect($fs[$currentDir]['files'])->sum();
         foreach ($fs[$currentDir]['dirs'] as $dir) {
-            $subDir = '/' === $currentDir ? "/$dir" : "$currentDir/$dir";
+            $subDir = '/' === $currentDir ? "/{$dir}" : "{$currentDir}/{$dir}";
             $size += $this->calculateSize($fs, $subDir);
         }
         $fs[$currentDir]['size'] = $size;

@@ -6,6 +6,7 @@ namespace App\Days;
 
 use App\Contracts\Day;
 use Illuminate\Support\Collection;
+use Generator;
 
 class Day8 extends Day
 {
@@ -95,7 +96,7 @@ class Day8 extends Day
             // the number of trees we can see over
             $visibility = [];
             collect($this->adjacent)
-                ->each(function (array $pos) use ($y, $x, $height, $input, &$visibility) {
+                ->each(function (array $pos) use ($y, $x, $height, $input, &$visibility): void {
                     $visible = 0;
                     while (true) {
                         // keep travelling in the adjacent direction
@@ -129,9 +130,9 @@ class Day8 extends Day
      *
      * @param array $input array<string, int> $input key in format `y-x`
      *
-     * @return \Generator array<string, int, int, int, int, int, bool>
+     * @return Generator array<string, int, int, int, int, int, bool>
      */
-    protected function treeIterator(array $input): \Generator
+    protected function treeIterator(array $input): Generator
     {
         // loop over our input in y,x coordinates
         for ($y = 0, $yMax = count($input); $y < $yMax; ++$y) {
@@ -149,6 +150,6 @@ class Day8 extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            ->map(fn (string $line) => str_split($line));
+            ->map(fn (string $line) => mb_str_split($line));
     }
 }

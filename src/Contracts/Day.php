@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Contracts;
 
 use Illuminate\Support\Collection;
+use ReflectionClass;
 
 abstract class Day implements DayInterface
 {
@@ -52,6 +53,6 @@ abstract class Day implements DayInterface
      */
     final public function day(): string
     {
-        return (new \ReflectionClass($this))->getShortName();
+        return (new ReflectionClass($this))->getShortName();
     }
 }

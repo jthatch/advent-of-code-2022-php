@@ -6,6 +6,7 @@ namespace App\Runner;
 
 use App\Contracts\Day;
 use App\DayFactory;
+use Generator;
 
 class Runner implements RunnerInterface
 {
@@ -58,16 +59,16 @@ class Runner implements RunnerInterface
     protected function runPart(Day $day, int $part): void
     {
         $startTime = microtime(true);
-        $method    = "solvePart$part";
-        printf("    Part$part \e[1;32m%s\e[0m\n", $day->$method($day->input));
+        $method    = "solvePart{$part}";
+        printf("    Part{$part} \e[1;32m%s\e[0m\n", $day->$method($day->input));
         $this->report($startTime);
     }
 
     protected function runPartExamples(int $part, Day $day): void
     {
         $startTime     = microtime(true);
-        $exampleMethod = "getExample$part";
-        $solveMethod   = "solvePart$part";
+        $exampleMethod = "getExample{$part}";
+        $solveMethod   = "solvePart{$part}";
         $examples      = $day->$exampleMethod();
 
         is_array($examples)
@@ -90,7 +91,7 @@ class Runner implements RunnerInterface
         printf("    Part%d Example \e[1;32m%s\e[0m\n", $part, $day->$solveMethod($example));
     }
 
-    protected function dayGenerator(): \Generator
+    protected function dayGenerator(): Generator
     {
         return null !== $this->days
             ? (function () {

@@ -6,6 +6,7 @@ namespace App\Runner;
 
 use App\Runner\DTO\CliArg;
 use App\Runner\DTO\CliArgType;
+use RuntimeException;
 
 class ParseCliArgs
 {
@@ -36,7 +37,7 @@ class ParseCliArgs
         $getOptOptions = getopt('', $longOptions);
         foreach ($getOptOptions as $key => $value) {
             if (!isset($options[$key])) {
-                throw new \RuntimeException('Invalid option: '.$key);
+                throw new RuntimeException('Invalid option: '.$key);
             }
 
             $option = &$options[$key];
