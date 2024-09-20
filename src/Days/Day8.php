@@ -51,8 +51,8 @@ class Day8 extends Day
 
                     while (true) {
                         // keep travelling in the adjacent direction
-                        $y += $pos[0];
-                        $x += $pos[1];
+                        $y += (int) $pos[0];
+                        $x += (int) $pos[1];
                         // applying null if we exceed the boundaries (go past the edge)
                         $nextHeight = $input[$y][$x] ?? null;
 
@@ -100,8 +100,8 @@ class Day8 extends Day
                     $visible = 0;
                     while (true) {
                         // keep travelling in the adjacent direction
-                        $y += $pos[0];
-                        $x += $pos[1];
+                        $y += (int) $pos[0];
+                        $x += (int) $pos[1];
                         $nextHeight = $input[$y][$x] ?? null;
 
                         // break when we hit the edge

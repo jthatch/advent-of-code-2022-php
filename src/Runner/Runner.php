@@ -10,6 +10,11 @@ use Generator;
 
 class Runner implements RunnerInterface
 {
+    /**
+     * @param Options $options
+     * @param DayFactory $factory
+     * @param array<int, int>|null $days
+     */
     public function __construct(
         protected Options $options,
         protected DayFactory $factory = new DayFactory(),
@@ -78,6 +83,12 @@ class Runner implements RunnerInterface
         $this->report($startTime);
     }
 
+    /**
+     * @param int $part
+     * @param Day $day
+     * @param array<int, mixed> $examples
+     * @param string $solveMethod
+     */
     protected function runMultipleExamples(int $part, Day $day, array $examples, string $solveMethod): void
     {
         foreach ($examples as $i => $example) {

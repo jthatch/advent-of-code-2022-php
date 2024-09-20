@@ -6,6 +6,7 @@ namespace App\Days;
 
 use App\Contracts\Day;
 use Illuminate\Support\Collection;
+use RuntimeException;
 
 class Day5 extends Day
 {
@@ -103,7 +104,12 @@ class Day5 extends Day
     {
         $stackLine = $rawDiagram->pop(); //  " 1   2   3 "
         // create an empty array keyed by the stack columns 1,2,3 etc
-        $stacks = array_map(fn () => [], array_flip(preg_split("/\s+/", trim((string) $stackLine))));
+        $stackNumbers = preg_split("/\s+/", trim((string) $stackLine));
+        if (false === $stackNumbers) {
+            throw new RuntimeException('Failed to parse stack numbers');
+        }
+        /** @var array<string, array<int, string>> $stacks */
+        $stacks = array_map(fn () => [], array_flip($stackNumbers));
         // loop over each remaining diagram line, adding the crates to the correct stack column
         $rawDiagram->each(function ($line) use (&$stacks): void {
             $crates = collect(mb_str_split($line, 4))

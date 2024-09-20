@@ -10,12 +10,11 @@ use RuntimeException;
 
 class ParseCliArgs
 {
-    /** @var CliARg[] */
+    /**
+     * @var array<string, CliArg>
+     */
     public readonly array $options;
 
-    /**
-     * @param CliArg[] $cliArgs
-     */
     public function __construct(CliArg ...$cliArgs)
     {
         $this->options = $this->setCliArgs(...$cliArgs);
@@ -24,12 +23,17 @@ class ParseCliArgs
     public function getOptions(): Options
     {
         return new Options(
-            days: $this->options['day']?->value   ?? null,
-            parts: $this->options['part']?->value ?? null,
-            withExamples: (bool) ($this->options['examples']?->value ?? false),
+            days: $this->options['day']->value   ?? null,
+            parts: $this->options['part']->value ?? null,
+            withExamples: (bool) ($this->options['examples']->value ?? false),
         );
     }
 
+    /**
+     * @param CliArg ...$args
+     *
+     * @return array<string, CliArg>
+     */
     protected function setCliArgs(CliArg ...$args): array
     {
         $options       = array_merge(...array_map(fn (CliArg $a) => [$a->longName => $a], $args));
@@ -56,15 +60,35 @@ class ParseCliArgs
     /**
      * Returns an array containing the unique values found in the comma-separated and ranged list, including combinations of both
      * Example: "1-3,5" would result in [1,2,3,5].
+     *
+     * @param string|array<int, mixed>|false $input
+     * @return array<int, int>
      */
-    protected function parseRangeAndCommaSeparated(string $input): array
+    protected function parseRangeAndCommaSeparated(string|array|false $input): array
     {
-        $values = array_map('intval', array_merge([], ...array_map(static fn (string $chunk) => (str_contains($chunk, '-') && [$start, $end] = sscanf($chunk, '%d-%d')) ? range($start, $end) : [$chunk], explode(',', $input))));
+        if (!is_string($input)) {
+            return [];
+        }
+
+        $values = array_map('intval', array_merge([], ...array_map(function (string $chunk) {
+            if (str_contains($chunk, '-')) {
+                $parts = explode('-', $chunk, 2);
+                $start = (int) $parts[0];
+                $end   = (int) ($parts[1] ?? $start);
+                return range($start, $end);
+            }
+            return [$chunk];
+        }, explode(',', $input))));
         sort($values);
 
         return $values;
     }
 
+    /**
+     * @param array<string> $longOpts
+     *
+     * @return array<string>
+     */
     protected function optionsAsShortOpt(array $longOpts): array
     {
         return array_map(static fn (string $o): string => $o[0].preg_replace('/[a-z]+/', '', $o), $longOpts);

@@ -52,7 +52,7 @@ class Day11 extends Day
             foreach ($monkeys as $id => &$monkey) {
                 $inspections[$id] += count($monkey['items']);
                 foreach ($monkey['items'] as $item) {
-                    $worry   = intdiv($this->performOperation($item, $monkey['operation']), 3);
+                    $worry   = intdiv((int) $this->performOperation($item, $monkey['operation']), 3);
                     $throwTo = $monkey[0 === $worry % $monkey['test'] ? 'true' : 'false'];
                     // if worry is divisible by 3, throw to monkey marked as 'true', otherwise monkey marked as 'false'
                     // pass the item to the monkey
@@ -108,7 +108,7 @@ class Day11 extends Day
      */
     protected function performOperation(int $old, array $operation): int|float
     {
-        $target = 'old' === $operation['target'] ? $old : $operation['target'];
+        $target = 'old' === $operation['target'] ? $old : (int) $operation['target'];
 
         return '*' === $operation['symbol'] ? $old * $target : $old + $target;
     }
@@ -142,10 +142,8 @@ class Day11 extends Day
                 preg_match("/Test: divisible by (\d+)/", $chunk[3], $testMatch);
                 preg_match("/If true: throw to monkey (\d+)/", $chunk[4], $trueMatch);
                 preg_match("/If false: throw to monkey (\d+)/", $chunk[5], $falseMatch);
-                if (
-                    (null === $idMatch || 2 !== count($idMatch)) || (null === $operationMatch || 3 !== count($operationMatch)) || (null === $testMatch || 2 !== count($testMatch)) || (null === $trueMatch || 2 !== count($trueMatch)) || (null === $falseMatch || 2 !== count($falseMatch))
-                ) {
-                    throw new RuntimeException('invalid parsing of puzzle input');
+                if (!$idMatch || !$operationMatch || !$testMatch || !$trueMatch || !$falseMatch) {
+                    throw new RuntimeException('Invalid parsing of puzzle input');
                 }
 
                 return [
