@@ -9,9 +9,9 @@ use Illuminate\Support\Collection;
 
 class DayX extends Day
 {
-    public const EXAMPLE1 = <<<EOF
-        // TODO: Add example 1
-    EOF;
+    public const EXAMPLE1 = <<<eof
+    // todo: add example 1
+    eof;
 
     /**
      * Solve Part 1 of the day's problem.
@@ -20,7 +20,7 @@ class DayX extends Day
     {
         $input = $this->parseInput($input);
 
-        // TODO: Implement solution for Part 1
+        // todo: implement solution for Part 1
 
         return null;
     }
@@ -32,7 +32,7 @@ class DayX extends Day
     {
         $input = $this->parseInput($input);
 
-        // TODO: Implement solution for Part 2
+        // todo: implement solution for Part 2
 
         return null;
     }
@@ -45,7 +45,7 @@ class DayX extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            // TODO: Add any necessary transformations
+            // todo: add any necessary transformations
         ;
     }
 }

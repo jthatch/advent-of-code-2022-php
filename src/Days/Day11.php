@@ -6,7 +6,6 @@ namespace App\Days;
 
 use App\Contracts\Day;
 use Illuminate\Support\Collection;
-use RuntimeException;
 
 class Day11 extends Day
 {
@@ -118,7 +117,7 @@ class Day11 extends Day
      *
      * @param mixed $input The input string or array to parse
      *
-     * @return \Illuminate\Support\Collection<int, array{
+     * @return Collection<int, array{
      *     id: int,
      *     items: array<int>,
      *     operation: array{symbol: string, target: int|string},
@@ -137,25 +136,24 @@ class Day11 extends Day
             ->map(fn ($chunk) => $chunk->values())
             ->map(fn ($chunk) => $chunk->filter(fn ($value) => '' !== $value)->values())
             ->map(function (Collection $chunk): array {
-                preg_match("/Monkey (\d+):/", $chunk[0], $idMatch);
-                preg_match("/Operation: new = old ([*+]) ([\w\d]+)/", $chunk[2], $operationMatch);
-                preg_match("/Test: divisible by (\d+)/", $chunk[3], $testMatch);
-                preg_match("/If true: throw to monkey (\d+)/", $chunk[4], $trueMatch);
-                preg_match("/If false: throw to monkey (\d+)/", $chunk[5], $falseMatch);
-                if (!$idMatch || !$operationMatch || !$testMatch || !$trueMatch || !$falseMatch) {
-                    throw new RuntimeException('Invalid parsing of puzzle input');
-                }
+                $id        = $test = $trueMonkey = $falseMonkey = null;
+                $operation = ['symbol' => '', 'target' => ''];
+                sscanf($chunk[0], "Monkey %d:", $id);
+                sscanf($chunk[2], "Operation: new = old %c %s", $operation['symbol'], $operation['target']);
+                sscanf($chunk[3], "Test: divisible by %d", $test);
+                sscanf($chunk[4], "If true: throw to monkey %d", $trueMonkey);
+                sscanf($chunk[5], "If false: throw to monkey %d", $falseMonkey);
 
                 return [
-                    'id'        => (int) $idMatch[1],
+                    'id'        => (int) $id,
                     'items'     => array_map('intval', explode(', ', str_replace('Starting items: ', '', $chunk[1]))),
                     'operation' => [
-                        'symbol' => $operationMatch[1],
-                        'target' => is_numeric($operationMatch[2]) ? (int) $operationMatch[2] : $operationMatch[2],
+                        'symbol' => $operation['symbol'],
+                        'target' => is_numeric($operation['target']) ? (int) $operation['target'] : $operation['target'],
                     ],
-                    'test'  => (int) $testMatch[1],
-                    'true'  => (int) $trueMatch[1],
-                    'false' => (int) $falseMatch[1],
+                    'test'  => (int) $test,
+                    'true'  => (int) $trueMonkey,
+                    'false' => (int) $falseMonkey,
                 ];
             });
     }
