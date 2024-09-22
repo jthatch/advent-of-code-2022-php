@@ -10,7 +10,8 @@ use Illuminate\Support\Collection;
 class Day14 extends Day
 {
     public const EXAMPLE1 = <<<eof
-    // todo: add example 1
+    498,4 -> 498,6 -> 496,6
+    503,4 -> 502,4 -> 502,9 -> 494,9
     eof;
 
     /**
@@ -20,7 +21,8 @@ class Day14 extends Day
     {
         $input = $this->parseInput($input);
 
-        // todo: implement solution for Part 1
+        // todo wip
+        dd($input);
 
         return null;
     }
@@ -45,7 +47,12 @@ class Day14 extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            // todo: add any necessary transformations
+            ->map(fn (string $line) => explode(' -> ', $line))
+            ->map(
+                fn (array $points) => collect($points)
+                    ->map(fn (string $point) => array_map('intval', explode(',', $point)))
+                    ->toArray()
+            )
         ;
     }
 }
