@@ -41,10 +41,15 @@ class Day13 extends Day
     public function solvePart1(mixed $input): int|string|null
     {
         return $this->parseInput($input)
+            // compare each pair and return the comparison result
             ->map(fn (array $pair): int => $this->compare($pair[0], $pair[1]))
+            // filter for the pairs that are in the right order
             ->filter(fn (int $comparison): bool => -1 === $comparison)
+            // get the keys of the pairs that are in the right order
             ->keys()
+            // map the keys to their position in the array + 1 (since we want 1-indexed positions)
             ->map(fn (int $key): int => $key + 1)
+            // sum the keys
             ->sum();
     }
 
@@ -53,11 +58,22 @@ class Day13 extends Day
      */
     public function solvePart2(mixed $input): int|string|null
     {
-        $input = $this->parseInput($input);
-
-        // todo: implement solution for Part 2
-
-        return null;
+        return $this->parseInput($input)
+            // flattern the array so it's no longer in pairs
+            ->flatten(1)
+            // add the divider packets
+            ->push([[2]], [[6]])
+            // sort the packets using the compare function
+            ->sort(fn (array $left, array $right): int => $this->compare($left, $right))
+            ->values()
+            // filter for the divider packets
+            ->filter(fn (array $item): bool => $item === [[2]] || $item === [[6]])
+            // get the keys of the divider packets
+            ->keys()
+            // map the keys to their position in the array + 1 (since we want 1-indexed positions)
+            ->map(fn (int $key): int => $key + 1)
+            // reduce the keys to a single value by multiplying them together
+            ->reduce(fn (int $carry, int $item): int => $carry * $item, 1);
     }
 
     /**
