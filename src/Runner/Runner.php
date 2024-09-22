@@ -107,7 +107,7 @@ class Runner implements RunnerInterface
         return null !== $this->days
             ? (function () {
                 while (!empty($this->days)) {
-                    yield $this->factory->create((int) array_pop($this->days));
+                    yield $this->factory->create((int) array_shift($this->days));
                 }
             })()
             : $this->factory->allAvailableDays();
@@ -155,7 +155,7 @@ class Runner implements RunnerInterface
 
         printf(
             "      \e[2mMem[%s] Peak[%s] Time[%s]\e[0m\n",
-            $this->colorise($this->humanReadableBytes($mem), $mem, 750000, 1000000),
+            $this->colorise($this->humanReadableBytes($mem), $mem, 900000, 2000000),
             $this->colorise($this->humanReadableBytes($memPeak), $memPeak, 5e+7, 1e+8),
             $this->colorise(sprintf('%.5fs', $time), $time, 0.1, 0.75),
         );
