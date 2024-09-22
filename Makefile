@@ -100,9 +100,6 @@ cleanup: ## remove all docker images
 	docker rm $$(docker ps -a | grep '$(image-name)' | awk '{print $$1}') --force || true
 	docker image rm $(image-name)
 
-cs-fix: ## run php-cs-fixer
-	$(DOCKER_RUN) $(image-name) composer --no-cache run cs-fixer
-
 pint: ## run php-cs-fixer
 	$(DOCKER_RUN) $(image-name) composer --no-cache run pint
 
@@ -126,12 +123,4 @@ next:
 	next_day=$$(( $$next_day + 1 )); \
 	sed "s/DayX/Day$$next_day/g" stub/DayX.php.stub > src/Days/Day$$next_day.php; \
 	echo "Created src/Days/Day$$next_day.php"
-	make get-input
-next2: ## Generates the next days PHP files
-ifneq ("$(wildcard src/Day$(nextDay).php)","")
-	@echo -e "The file: src/Day$(nextDay).php already exists...\n"
-else
-	@echo -e "$(DAY_TEMPLATE)" >src/Day$(nextDay).php
-	@echo -e "Created new file: src/Day$(nextDay).php"
-endif
-	make get-input
+	@make get-input
