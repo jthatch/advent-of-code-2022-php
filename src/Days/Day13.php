@@ -123,6 +123,7 @@ class Day13 extends Day
             }
         }
     }
+
     /**
      * Parse the input data.
      */
