@@ -83,9 +83,62 @@ class Day12 extends Day
     public function solvePart2(mixed $input): int|string|null
     {
         $grid = $this->parseInput($input)->toArray();
-        dd($grid);
 
-        return null;
+        $rows = count($grid);
+        $cols = count($grid[0]);
+
+        // Find start and end positions
+        $startingPoints = [];
+        $end            = null;
+        foreach ($grid as $y => $row) {
+            foreach ($row as $x => $cell) {
+                match ($cell) {
+                    'S'     => [$startingPoints[], $grid[$y][$x]] = [[$y, $x], 'a'],
+                    'E'     => [$end, $grid[$y][$x]]              = [[$y, $x], 'z'],
+                    'a'     => $startingPoints[]                  = [$y, $x],
+                    default => null,
+                };
+            }
+        }
+
+        return $this->bfs($grid, $startingPoints, $end, $rows, $cols);
+    }
+
+    protected function bfs(array $grid, array $startingPoints, array $end, int $rows, int $cols): int|string|null
+    {
+        $queue = new SplQueue();
+        foreach ($startingPoints as $point) {
+            $queue->enqueue([$point, 0]); // [position, steps]
+        }
+
+        $visited = array_fill(0, $rows, array_fill(0, $cols, false));
+        foreach ($startingPoints as $point) {
+            $visited[$point[0]][$point[1]] = true;
+        }
+
+        while (!$queue->isEmpty()) {
+            [$current, $steps] = $queue->dequeue();
+            [$x, $y]           = $current;
+
+            if ($current === $end) {
+                return $steps; // found the shortest path
+            }
+
+            foreach ($this->directions as [$dx, $dy]) {
+                $newX = $x + $dx;
+                $newY = $y + $dy;
+
+                if ($newX >= 0 && $newX < $rows && $newY >= 0 && $newY < $cols
+                               && !$visited[$newX][$newY]
+                               && ord($grid[$newX][$newY]) <= ord($grid[$x][$y]) + 1
+                ) {
+                    $queue->enqueue([[$newX, $newY], $steps + 1]);
+                    $visited[$newX][$newY] = true;
+                }
+            }
+        }
+
+        return null; // no path found
     }
 
     /**
