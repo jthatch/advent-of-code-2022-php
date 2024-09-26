@@ -176,8 +176,8 @@ class Day14 extends Day
         // add the sand source
         $grid[sprintf('%d,%d', $sandSource['y'], $sandSource['x'])] = '+';
 
-        $sandCount = 0;
-        $frame     = 0;
+        $sandCount  = 0;
+        $frame      = 0;
         $directions = [
             [1, 0],  // down
             [1, -1], // down-left
@@ -203,12 +203,12 @@ class Day14 extends Day
                 foreach ($directions as $direction) {
                     $newY = $sand['y'] + $direction[0];
                     $newX = $sand['x'] + $direction[1];
-                    $key = sprintf('%d,%d', $newY, $newX);
-                    if (!isset($grid[$key]) || $grid[$key] === '.') {
+                    $key  = sprintf('%d,%d', $newY, $newX);
+                    if (!isset($grid[$key]) || '.' === $grid[$key]) {
                         $sand['y'] = $newY;
                         $sand['x'] = $newX;
-                        $moved = true;
-                        $action = $direction[1] === 0 ? "sand moved down" : ($direction[1] === -1 ? "sand moved down and left" : "sand moved down and right");
+                        $moved     = true;
+                        $action    = 0 === $direction[1] ? "sand moved down" : (-1 === $direction[1] ? "sand moved down and left" : "sand moved down and right");
                         break;
                     }
                 }
