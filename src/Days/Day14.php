@@ -23,7 +23,8 @@ class Day14 extends Day
     //protected int $interactiveModePart2 = self::INTERACTIVE_DELAY;
     protected int $interactiveModePart2 = self::NO_INTERACTIVE;
 
-    protected int $delay = 50000;
+    protected int $delay = 10000; // 10000 = 10ms
+
     /**
      * Using your scan, simulate the falling sand. How many units of sand come to rest before sand starts flowing into the abyss below?
      */
@@ -35,6 +36,15 @@ class Day14 extends Day
 
         $grid = [];
 
+        // pre-allocate the grid with a fixed size
+        $minX = 500 - $maxY - 1;
+        $maxX = 500 + $maxY + 1;
+        for ($y = 0; $y <= $maxY; $y++) {
+            for ($x = $minX; $x <= $maxX; $x++) {
+                $grid[$y][$x] = '.';
+            }
+        }
+
         // fill the grid with the paths
         foreach ($input as $path) {
             for ($i = 1, $iMax = count($path); $i < $iMax; $i++) {
@@ -44,15 +54,14 @@ class Day14 extends Day
                 $yRange = range(min($start['y'], $end['y']), max($start['y'], $end['y']));
                 foreach ($yRange as $y) {
                     foreach ($xRange as $x) {
-                        $key        = sprintf('%d,%d', $y, $x);
-                        $grid[$key] = '#';
+                        $grid[$y][$x] = '#';
                     }
                 }
             }
         }
 
         // add the sand source
-        $grid[sprintf('%d,%d', $sandSource['y'], $sandSource['x'])] = '+';
+        $grid[$sandSource['y']][$sandSource['x']] = '+';
 
         if ($this->interactiveModePart1) {
             printf("%s\n", $this->printGrid($grid));
@@ -60,82 +69,61 @@ class Day14 extends Day
 
         $sandCount = 0;
         $frame     = 0;
+
         while (true) {
-            $sand  = $sandSource;
-            $moved = false;
+            $sand = $sandSource;
+
             while (true) {
                 $action = '';
                 ++$frame;
-                $prevSand = sprintf('%d,%d', $sand['y'], $sand['x']);
+                $prevY = $sand['y'];
+                $prevX = $sand['x'];
 
-                if ($sand['y'] > $maxY) {
+                if ($sand['y'] >= $maxY) {
                     break 2;
                 }
 
-                $below     = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'])]     ?? '.';
-                $diagLeft  = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] - 1)] ?? '.';
-                $diagRight = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] + 1)] ?? '.';
-
-                //dd($below, $diagLeft, $diagRight);
-
-                if ('.' === $below) {
-                    $action = "sand moved down";
+                // check directly below
+                if (!isset($grid[$sand['y'] + 1][$sand['x']]) || '.' === $grid[$sand['y'] + 1][$sand['x']]) {
                     $sand['y']++;
-                    $moved = true;
-                } elseif ('.' === $diagLeft) {
-                    $action = "sand moved down and left";
+                    $action = "sand moved down";
+                }
+                // check diagonally left
+                elseif (!isset($grid[$sand['y'] + 1][$sand['x'] - 1]) || '.' === $grid[$sand['y'] + 1][$sand['x'] - 1]) {
                     $sand['y']++;
                     $sand['x']--;
-                    $moved = true;
-                } elseif ('.' === $diagRight) {
-                    $action = "sand moved down and right";
+                    $action = "sand moved down and left";
+                }
+                // check diagonally right
+                elseif (!isset($grid[$sand['y'] + 1][$sand['x'] + 1]) || '.' === $grid[$sand['y'] + 1][$sand['x'] + 1]) {
                     $sand['y']++;
                     $sand['x']++;
-                    $moved = true;
+                    $action = "sand moved down and right";
                 } else {
-                    $action = "sand came to rest";
                     ++$sandCount;
-                    $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = 'o';
+                    $action                       = "sand came to rest";
+                    $grid[$sand['y']][$sand['x']] = 'o';
                     break;
-                }
-
-                if ($moved && $this->interactiveModePart1) {
-                    $grid[$prevSand]                                = '.';
-                    $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = '+';
                 }
 
                 // handle interactive mode
                 if ($this->interactiveModePart1) {
-                    printf(
-                        "%s\n",
-                        $this->printGrid(
-                            $grid,
-                            $sand,
-                            sprintf(
-                                "sand: %d, frame: %d, y,x: %d,%d, below: %s, diagLeft: %s, diagRight: %s action: %s\n",
-                                $sandCount,
-                                $frame,
-                                $sand['y'],
-                                $sand['x'],
-                                $below,
-                                $diagLeft,
-                                $diagRight,
-                                $action
-                            )
-                        )
-                    );
+                    $grid[$prevY][$prevX]         = '.';
+                    $grid[$sand['y']][$sand['x']] = '+';
+                    printf("%s\n", $this->printGrid($grid, $sand, sprintf(
+                        "sand: %d, frame: %d, y,x: %d,%d, action: %s\n",
+                        $sandCount,
+                        $frame,
+                        $sand['y'],
+                        $sand['x'],
+                        $action
+                    )));
                     if (self::INTERACTIVE_KB === $this->interactiveModePart1) {
-                        echo "Press any key to continue...\n";
-                        system('stty cbreak -echo');
-                        $input = fread(STDIN, 1);
-                        system('stty -cbreak echo');
+                        $this->waitForKeyPress();
                     } elseif (self::INTERACTIVE_DELAY === $this->interactiveModePart1) {
                         $this->delay && usleep($this->delay);
                     }
                 }
-            }
-            if (!$moved) {
-                break;
             }
         }
 
@@ -148,6 +136,10 @@ class Day14 extends Day
 
     /**
      * Using your scan, simulate the falling sand until the source of the sand becomes blocked. How many units of sand come to rest?
+     * 1.0s to 0.1s performance improvements:
+     * - use 2d array instead of hashmap
+     * - pre-allocate the grid with a fixed size
+     * - use isset() to check if a cell is empty instead of using the null coalescing operator
      */
     public function solvePart2(mixed $input): int|string|null
     {
@@ -157,7 +149,16 @@ class Day14 extends Day
 
         $grid = [];
 
-        // fill the grid with the paths
+        // Pre-allocate the grid with a fixed size
+        $minX = 500 - $maxY;
+        $maxX = 500 + $maxY;
+        for ($y = 0; $y <= $maxY; $y++) {
+            for ($x = $minX; $x <= $maxX; $x++) {
+                $grid[$y][$x] = '.';
+            }
+        }
+
+        // Fill the grid with the paths
         foreach ($input as $path) {
             for ($i = 1, $iMax = count($path); $i < $iMax; $i++) {
                 $start  = $path[$i - 1];
@@ -166,22 +167,22 @@ class Day14 extends Day
                 $yRange = range(min($start['y'], $end['y']), max($start['y'], $end['y']));
                 foreach ($yRange as $y) {
                     foreach ($xRange as $x) {
-                        $grid["{$y},{$x}"] = '#';
+                        $grid[$y][$x] = '#';
                     }
                 }
             }
         }
 
-        // add the sand source
-        $grid["{$sandSource['y']},{$sandSource['x']}"] = '+';
+        // Add the sand source
+        $grid[$sandSource['y']][$sandSource['x']] = '+';
 
-        $sandCount  = 0;
-        $frame      = 0;
-        $directions = [
-            [1, 0],  // down
-            [1, -1], // down-left
-            [1, 1]   // down-right
-        ];
+        // Add the floor
+        for ($x = $minX; $x <= $maxX; $x++) {
+            $grid[$maxY][$x] = '#';
+        }
+
+        $sandCount = 0;
+        $frame     = 0;
 
         while (true) {
             $sand = $sandSource;
@@ -189,33 +190,29 @@ class Day14 extends Day
             while (true) {
                 $action = '';
                 ++$frame;
-                $prevSand = "{$sand['y']},{$sand['x']}";
+                $prevY = $sand['y'];
+                $prevX = $sand['x'];
 
-                // set the floor dynamically
-                if ($sand['y'] + 1 >= $maxY) {
-                    $grid[($sand['y'] + 1).','.($sand['x'] - 1)] = '#';
-                    $grid[($sand['y'] + 1).','.$sand['x']]       = '#';
-                    $grid[($sand['y'] + 1).','.($sand['x'] + 1)] = '#';
+                // check directly below
+                if ('.' === $grid[$sand['y'] + 1][$sand['x']]) {
+                    $sand['y']++;
+                    $action = "sand moved down";
                 }
-
-                $moved = false;
-                foreach ($directions as $direction) {
-                    $newY = $sand['y'] + $direction[0];
-                    $newX = $sand['x'] + $direction[1];
-                    $key  = "{$newY},{$newX}";
-                    if (!isset($grid[$key]) || '.' === $grid[$key]) {
-                        $sand['y'] = $newY;
-                        $sand['x'] = $newX;
-                        $moved     = true;
-                        $action    = 0 === $direction[1] ? "sand moved down" : (-1 === $direction[1] ? "sand moved down and left" : "sand moved down and right");
-                        break;
-                    }
+                // check diagonally left
+                elseif ('.' === $grid[$sand['y'] + 1][$sand['x'] - 1]) {
+                    $sand['y']++;
+                    $sand['x']--;
+                    $action = "sand moved down and left";
                 }
-
-                if (!$moved) {
+                // check diagonally right
+                elseif ('.' === $grid[$sand['y'] + 1][$sand['x'] + 1]) {
+                    $sand['y']++;
+                    $sand['x']++;
+                    $action = "sand moved down and right";
+                } else {
                     ++$sandCount;
-                    $action .= "sand came to rest";
-                    $grid["{$sand['y']},{$sand['x']}"] = 'o';
+                    $action                       = "sand came to rest";
+                    $grid[$sand['y']][$sand['x']] = 'o';
                     // if the sand is at the source, break out of the loop
                     if (0 === $sand['y'] && 500 === $sand['x']) {
                         $action .= 'sand at source';
@@ -224,33 +221,20 @@ class Day14 extends Day
                     break;
                 }
 
-                if ($moved && $this->interactiveModePart2) {
-                    $grid[$prevSand]                   = '.';
-                    $grid["{$sand['y']},{$sand['x']}"] = '+';
-                }
-
                 // handle interactive mode
                 if ($this->interactiveModePart2) {
-                    printf(
-                        "%s\n",
-                        $this->printGrid(
-                            $grid,
-                            $sand,
-                            sprintf(
-                                "sand: %d, frame: %d, y,x: %d,%d, action: %s\n",
-                                $sandCount,
-                                $frame,
-                                $sand['y'],
-                                $sand['x'],
-                                $action,
-                            )
-                        )
-                    );
+                    $grid[$prevY][$prevX]         = '.';
+                    $grid[$sand['y']][$sand['x']] = '+';
+                    printf("%s\n", $this->printGrid($grid, $sand, sprintf(
+                        "sand: %d, frame: %d, y,x: %d,%d, action: %s\n",
+                        $sandCount,
+                        $frame,
+                        $sand['y'],
+                        $sand['x'],
+                        $action,
+                    )));
                     if (self::INTERACTIVE_KB === $this->interactiveModePart2) {
-                        echo "Press any key to continue...\n";
-                        system('stty cbreak -echo');
-                        $input = fread(STDIN, 1);
-                        system('stty -cbreak echo');
+                        $this->waitForKeyPress();
                     } elseif (self::INTERACTIVE_DELAY === $this->interactiveModePart2) {
                         $this->delay && usleep($this->delay);
                     }
@@ -291,49 +275,29 @@ class Day14 extends Day
             };
         };
 
-        // Find grid dimensions
-        $coordinates = array_map(fn ($key) => explode(',', $key), array_keys($grid));
-        $yValues     = array_column($coordinates, 0);
-        $xValues     = array_column($coordinates, 1);
-        $minY        = min($yValues);
-        $maxY        = max($yValues);
-        $minX        = min($xValues);
-        $maxX        = max($xValues);
-
-        $gridHeight     = $maxY                          - $minY + 1;
-        $gridWidth      = $maxX                          - $minX + 1;
+        $gridHeight     = count($grid);
+        $gridWidth      = count($grid[0]);
         $terminalHeight = (int) shell_exec('tput lines') - 2; // Subtract 2 for message and prompt
 
-        $startY = $minY;
-        $endY   = $maxY + 1;
+        $startY = 0;
+        $endY   = $gridHeight;
 
         if ($sand && $gridHeight > $terminalHeight) {
             $sandY        = $sand['y'];
             $halfTerminal = intdiv($terminalHeight, 2);
 
-            $startY = max($minY, $sandY - $halfTerminal);
-            $endY   = min($maxY + 1, $startY + $terminalHeight);
+            $startY = max(0, $sandY - $halfTerminal);
+            $endY   = min($gridHeight, $startY + $terminalHeight);
 
             // Adjust startY if endY is at the bottom of the grid
-            if ($endY === $maxY + 1) {
-                $startY = max($minY, $endY - $terminalHeight);
+            if ($endY === $gridHeight) {
+                $startY = max(0, $endY - $terminalHeight);
             }
         }
 
         $borderTopBottom = '+'.str_repeat('-', $gridWidth).'+';
-        $borderedGrid    = [];
-
-        for ($y = $startY; $y < $endY; $y++) {
-            $row = '|';
-            for ($x = $minX; $x <= $maxX; $x++) {
-                $key  = "{$y},{$x}";
-                $char = $grid[$key] ?? '.';
-                $row .= $colorize($char);
-            }
-            $row .= '|';
-            $borderedGrid[] = $row;
-        }
-
+        $borderedGrid    = array_slice($grid, $startY, $endY - $startY);
+        $borderedGrid    = array_map(fn (array $row) => '|'.implode('', array_map($colorize, $row)).'|', $borderedGrid);
         array_unshift($borderedGrid, $borderTopBottom);
         array_push($borderedGrid, $borderTopBottom);
 
@@ -344,11 +308,22 @@ class Day14 extends Day
             if ($clear) {
                 // Move cursor to top-left corner
                 echo "\033[2J\033[;H";
+
             }
+            // Use ANSI escape codes to clear the screen from cursor to end
+            //echo "\033[J" . $output;
             $lastOutput = $output;
         }
 
         return $output;
+    }
+
+    protected function waitForKeyPress(): void
+    {
+        echo "Press any key to continue...\n";
+        system('stty cbreak -echo');
+        $input = fread(STDIN, 1);
+        system('stty -cbreak echo');
     }
 
     /**
