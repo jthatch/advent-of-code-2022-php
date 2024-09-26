@@ -19,20 +19,19 @@ class Day14 extends Day
     protected const INTERACTIVE_DELAY = 2;
 
     protected int $interactiveModePart1 = self::NO_INTERACTIVE;
-    protected int $interactiveModePart2 = self::NO_INTERACTIVE;
+    //protected int $interactiveModePart2 = self::NO_INTERACTIVE;
     //protected int $interactiveModePart1 = self::INTERACTIVE_DELAY;
-    //protected int $interactiveModePart2 = self::INTERACTIVE_DELAY;
+    protected int $interactiveModePart2 = self::INTERACTIVE_DELAY;
 
-    protected int $delay = 0;
+    protected int $delay = 50000;
     /**
      * Using your scan, simulate the falling sand. How many units of sand come to rest before sand starts flowing into the abyss below?
      */
     public function solvePart1(mixed $input): int|string|null
     {
-        $input          = $this->parseInput($input);
-        $inputFlattened = $input->flatten(1);
-        $maxY           = $inputFlattened->max('y');
-        $sandSource     = ['x' => 500, 'y' => 0];
+        $input      = $this->parseInput($input);
+        $maxY       = $input->flatten(1)->max('y');
+        $sandSource = ['x' => 500, 'y' => 0];
 
         $grid = [];
 
@@ -152,10 +151,9 @@ class Day14 extends Day
      */
     public function solvePart2(mixed $input): int|string|null
     {
-        $input          = $this->parseInput($input);
-        $inputFlattened = $input->flatten(1);
-        $maxY           = $inputFlattened->max('y') + 2;
-        $sandSource     = ['x' => 500, 'y' => 0];
+        $input      = $this->parseInput($input);
+        $maxY       = $input->flatten(1)->max('y') + 2;
+        $sandSource = ['x' => 500, 'y' => 0];
 
         $grid = [];
 
@@ -180,6 +178,12 @@ class Day14 extends Day
 
         $sandCount = 0;
         $frame     = 0;
+        $directions = [
+            [1, 0],  // down
+            [1, -1], // down-left
+            [1, 1]   // down-right
+        ];
+
         while (true) {
             $sand = $sandSource;
 
@@ -195,24 +199,21 @@ class Day14 extends Day
                     $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] + 1)] = '#';
                 }
 
-                $below     = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'])]     ?? '.';
-                $diagLeft  = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] - 1)] ?? '.';
-                $diagRight = $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] + 1)] ?? '.';
+                $moved = false;
+                foreach ($directions as $direction) {
+                    $newY = $sand['y'] + $direction[0];
+                    $newX = $sand['x'] + $direction[1];
+                    $key = sprintf('%d,%d', $newY, $newX);
+                    if (!isset($grid[$key]) || $grid[$key] === '.') {
+                        $sand['y'] = $newY;
+                        $sand['x'] = $newX;
+                        $moved = true;
+                        $action = $direction[1] === 0 ? "sand moved down" : ($direction[1] === -1 ? "sand moved down and left" : "sand moved down and right");
+                        break;
+                    }
+                }
 
-                if ('.' === $below) {
-                    $action = "sand moved down";
-                    $sand['y']++;
-                    $moved = true;
-                } elseif ('.' === $diagLeft) {
-                    $action = "sand moved down and left";
-                    $sand['y']++;
-                    $sand['x']--;
-                    $moved = true;
-                } elseif ('.' === $diagRight) {
-                    $action = "sand moved down and right";
-                    $sand['y']++;
-                    $sand['x']++;
-                } else {
+                if (!$moved) {
                     ++$sandCount;
                     $action .= "sand came to rest";
                     $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = 'o';
@@ -223,10 +224,12 @@ class Day14 extends Day
                     }
                     break;
                 }
+
                 if ($moved && $this->interactiveModePart2) {
                     $grid[$prevSand]                                = '.';
                     $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = '+';
                 }
+
                 // handle interactive mode
                 if ($this->interactiveModePart2) {
                     printf(
@@ -235,14 +238,11 @@ class Day14 extends Day
                             $grid,
                             $sand,
                             sprintf(
-                                "sand: %d, frame: %d, y,x: %d,%d, below: %s, diagLeft: %s, diagRight: %s action: %s\n",
+                                "sand: %d, frame: %d, y,x: %d,%d, action: %s\n",
                                 $sandCount,
                                 $frame,
                                 $sand['y'],
                                 $sand['x'],
-                                $below,
-                                $diagLeft,
-                                $diagRight,
                                 $action,
                             )
                         )
