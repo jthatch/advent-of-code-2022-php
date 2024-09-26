@@ -43,6 +43,11 @@ class Day12 extends Day
             }
         }
 
+        // keep phpstan happy
+        if ($start === null || $end === null) {
+            return null;
+        }
+
         // Breadth-First Search
         $queue = new SplQueue();
         $queue->enqueue([$start, 0]); // [position, steps]
@@ -58,8 +63,8 @@ class Day12 extends Day
             }
 
             foreach ($this->directions as [$dx, $dy]) {
-                $newX = $x + $dx;
-                $newY = $y + $dy;
+                $newX = (int) $x + $dx;
+                $newY = (int) $y + $dy;
 
                 // check if the new position is within the grid bounds
                 // check if the new position has not been visited
@@ -101,7 +106,9 @@ class Day12 extends Day
             }
         }
 
-        return $this->bfs($grid, $startingPoints, $end, $rows, $cols);
+        return $end !== null
+        ? $this->bfs($grid, $startingPoints, $end, $rows, $cols)
+        : null;
     }
 
     protected function bfs(array $grid, array $startingPoints, array $end, int $rows, int $cols): int|string|null
@@ -128,9 +135,10 @@ class Day12 extends Day
                 $newX = $x + $dx;
                 $newY = $y + $dy;
 
-                if ($newX >= 0 && $newX < $rows && $newY >= 0 && $newY < $cols
-                               && !$visited[$newX][$newY]
-                               && ord($grid[$newX][$newY]) <= ord($grid[$x][$y]) + 1
+                if (is_int($newX) && is_int($newY) && 
+                    $newX >= 0 && $newX < $rows && $newY >= 0 && $newY < $cols &&
+                    !$visited[$newX][$newY] &&
+                    ord($grid[$newX][$newY]) <= ord($grid[$x][$y]) + 1
                 ) {
                     $queue->enqueue([[$newX, $newY], $steps + 1]);
                     $visited[$newX][$newY] = true;
