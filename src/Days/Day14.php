@@ -29,10 +29,10 @@ class Day14 extends Day
      */
     public function solvePart1(mixed $input): int|string|null
     {
-        $input                       = $this->parseInput($input);
-        $inputFlattened              = $input->flatten(1);
-        [$minX, $maxX, $minY, $maxY] = [$inputFlattened->min('x'), $inputFlattened->max('x'), $inputFlattened->min('y'), $inputFlattened->max('y')];
-        $sandSource                  = ['x' => 500, 'y' => 0];
+        $input          = $this->parseInput($input);
+        $inputFlattened = $input->flatten(1);
+        $maxY           = $inputFlattened->max('y');
+        $sandSource     = ['x' => 500, 'y' => 0];
 
         $grid = [];
 
@@ -152,10 +152,10 @@ class Day14 extends Day
      */
     public function solvePart2(mixed $input): int|string|null
     {
-        $input                       = $this->parseInput($input);
-        $inputFlattened              = $input->flatten(1);
-        [$minX, $maxX, $minY, $maxY] = [$inputFlattened->min('x') - 5, $inputFlattened->max('x') + 5, $inputFlattened->min('y'), $inputFlattened->max('y') + 2];
-        $sandSource                  = ['x' => 500, 'y' => 0];
+        $input          = $this->parseInput($input);
+        $inputFlattened = $input->flatten(1);
+        $maxY           = $inputFlattened->max('y') + 2;
+        $sandSource     = ['x' => 500, 'y' => 0];
 
         $grid = [];
 
