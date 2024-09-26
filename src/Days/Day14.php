@@ -19,9 +19,9 @@ class Day14 extends Day
     protected const INTERACTIVE_DELAY = 2;
 
     protected int $interactiveModePart1 = self::NO_INTERACTIVE;
-    //protected int $interactiveModePart2 = self::NO_INTERACTIVE;
     //protected int $interactiveModePart1 = self::INTERACTIVE_DELAY;
-    protected int $interactiveModePart2 = self::INTERACTIVE_DELAY;
+    //protected int $interactiveModePart2 = self::INTERACTIVE_DELAY;
+    protected int $interactiveModePart2 = self::NO_INTERACTIVE;
 
     protected int $delay = 50000;
     /**
@@ -166,15 +166,14 @@ class Day14 extends Day
                 $yRange = range(min($start['y'], $end['y']), max($start['y'], $end['y']));
                 foreach ($yRange as $y) {
                     foreach ($xRange as $x) {
-                        $key        = sprintf('%d,%d', $y, $x);
-                        $grid[$key] = '#';
+                        $grid["{$y},{$x}"] = '#';
                     }
                 }
             }
         }
 
         // add the sand source
-        $grid[sprintf('%d,%d', $sandSource['y'], $sandSource['x'])] = '+';
+        $grid["{$sandSource['y']},{$sandSource['x']}"] = '+';
 
         $sandCount  = 0;
         $frame      = 0;
@@ -190,20 +189,20 @@ class Day14 extends Day
             while (true) {
                 $action = '';
                 ++$frame;
-                $prevSand = sprintf('%d,%d', $sand['y'], $sand['x']);
+                $prevSand = "{$sand['y']},{$sand['x']}";
 
                 // set the floor dynamically
                 if ($sand['y'] + 1 >= $maxY) {
-                    $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] - 1)] = '#';
-                    $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'])]     = '#';
-                    $grid[sprintf('%d,%d', $sand['y'] + 1, $sand['x'] + 1)] = '#';
+                    $grid[($sand['y'] + 1).','.($sand['x'] - 1)] = '#';
+                    $grid[($sand['y'] + 1).','.$sand['x']]       = '#';
+                    $grid[($sand['y'] + 1).','.($sand['x'] + 1)] = '#';
                 }
 
                 $moved = false;
                 foreach ($directions as $direction) {
                     $newY = $sand['y'] + $direction[0];
                     $newX = $sand['x'] + $direction[1];
-                    $key  = sprintf('%d,%d', $newY, $newX);
+                    $key  = "{$newY},{$newX}";
                     if (!isset($grid[$key]) || '.' === $grid[$key]) {
                         $sand['y'] = $newY;
                         $sand['x'] = $newX;
@@ -216,7 +215,7 @@ class Day14 extends Day
                 if (!$moved) {
                     ++$sandCount;
                     $action .= "sand came to rest";
-                    $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = 'o';
+                    $grid["{$sand['y']},{$sand['x']}"] = 'o';
                     // if the sand is at the source, break out of the loop
                     if (0 === $sand['y'] && 500 === $sand['x']) {
                         $action .= 'sand at source';
@@ -226,8 +225,8 @@ class Day14 extends Day
                 }
 
                 if ($moved && $this->interactiveModePart2) {
-                    $grid[$prevSand]                                = '.';
-                    $grid[sprintf('%d,%d', $sand['y'], $sand['x'])] = '+';
+                    $grid[$prevSand]                   = '.';
+                    $grid["{$sand['y']},{$sand['x']}"] = '+';
                 }
 
                 // handle interactive mode
