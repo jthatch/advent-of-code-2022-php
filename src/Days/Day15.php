@@ -31,10 +31,51 @@ class Day15 extends Day
      */
     public function solvePart1(mixed $input): int|string|null
     {
-        $input = $this->parseInput($input);
-        dd($input);
+        $input   = $this->parseInput($input);
+        $targetY = 18 === $input->first()['sensor']['y']
+            ? 10        // for the example input
+            : 2000000; // for the actual puzzle input
 
-        return null;
+        $ranges = $input->map(function ($sensor) use ($targetY) {
+            $distance         = abs($sensor['sensor']['x'] - $sensor['beacon']['x']) + abs($sensor['sensor']['y'] - $sensor['beacon']['y']);
+            $distanceToTarget = abs($sensor['sensor']['y'] - $targetY);
+            $xRange           = $distance - $distanceToTarget;
+
+            return $xRange >= 0 ? [$sensor['sensor']['x'] - $xRange, $sensor['sensor']['x'] + $xRange] : null;
+        })->filter()->values();
+
+        // sort ranges by start position
+        $ranges = $ranges->sortBy(fn ($range) => $range[0]);
+
+        // merge overlapping ranges
+        $mergedRanges = $ranges->reduce(function ($carry, $range) {
+            if ($carry->isEmpty()) {
+                $carry->push($range);
+            } else {
+                $last = $carry->last();
+                if ($range[0] <= $last[1] + 1) {
+                    $carry->pop();
+                    $carry->push([$last[0], max($last[1], $range[1])]);
+                } else {
+                    $carry->push($range);
+                }
+            }
+            return $carry;
+        }, collect([]));
+
+        // count positions that cannot contain a beacon
+        $count = $mergedRanges->sum(fn ($range) => $range[1] - $range[0] + 1);
+
+        // subtract beacons already on the target row
+        $beaconsOnTargetRow = $input->pluck('beacon')
+            ->filter(fn ($beacon) => $beacon['y'] === $targetY)
+            ->pluck('x')
+            ->unique()
+            ->filter(fn ($x) => $mergedRanges->contains(fn ($range) => $x >= $range[0] && $x <= $range[1]));
+
+        $count -= $beaconsOnTargetRow->count();
+
+        return $count;
     }
 
     /**
@@ -43,8 +84,50 @@ class Day15 extends Day
     public function solvePart2(mixed $input): int|string|null
     {
         $input = $this->parseInput($input);
+        $max   = 18 === $input->first()['sensor']['y']
+            ? 20        // for the example input
+            : 4000000; // for the actual puzzle input
 
-        // todo: implement solution for Part 2
+        $sensors = $input->map(fn ($sensor) => [
+            'x'        => $sensor['sensor']['x'],
+            'y'        => $sensor['sensor']['y'],
+            'distance' => abs($sensor['sensor']['x'] - $sensor['beacon']['x']) + abs($sensor['sensor']['y'] - $sensor['beacon']['y']),
+        ])->toArray();
+
+        // for each row, check if there is a gap in the coverage
+        for ($y = 0; $y <= $max; $y++) {
+            $ranges = [];
+            foreach ($sensors as $sensor) {
+                $dy = abs($sensor['y'] - $y);
+                // if the row is within the sensor's range, add the range to the list
+                if ($dy <= $sensor['distance']) {
+                    $dx       = $sensor['distance'] - $dy;
+                    $ranges[] = [$sensor['x'] - $dx, $sensor['x'] + $dx];
+                }
+            }
+
+            // sort ranges by start position
+            usort($ranges, fn ($a, $b) => $a[0] <=> $b[0]);
+
+            // check for gaps in the coverage
+            $x = 0;
+            foreach ($ranges as $range) {
+                if ($x < $range[0]) {
+                    // found the gap
+                    return $x * 4000000 + $y;
+                }
+                $x = max($x, $range[1] + 1);
+                if ($x > $max) {
+                    // out of bounds
+                    break;
+                }
+            }
+
+            if ($x <= $max) {
+                // found the gap
+                return $x * 4000000 + $y;
+            }
+        }
 
         return null;
     }

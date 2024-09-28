@@ -44,7 +44,7 @@ class Day12 extends Day
         }
 
         // keep phpstan happy
-        if ($start === null || $end === null) {
+        if (null === $start || null === $end) {
             return null;
         }
 
@@ -106,7 +106,7 @@ class Day12 extends Day
             }
         }
 
-        return $end !== null
+        return null !== $end
         ? $this->bfs($grid, $startingPoints, $end, $rows, $cols)
         : null;
     }
@@ -135,10 +135,7 @@ class Day12 extends Day
                 $newX = $x + $dx;
                 $newY = $y + $dy;
 
-                if (is_int($newX) && is_int($newY) && 
-                    $newX >= 0 && $newX < $rows && $newY >= 0 && $newY < $cols &&
-                    !$visited[$newX][$newY] &&
-                    ord($grid[$newX][$newY]) <= ord($grid[$x][$y]) + 1
+                if (is_int($newX) && is_int($newY) && $newX >= 0 && $newX < $rows && $newY >= 0 && $newY < $cols && !$visited[$newX][$newY] && ord($grid[$newX][$newY]) <= ord($grid[$x][$y]) + 1
                 ) {
                     $queue->enqueue([[$newX, $newY], $steps + 1]);
                     $visited[$newX][$newY] = true;
