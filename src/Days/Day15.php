@@ -78,8 +78,13 @@ class Day15 extends Day
         return $count;
     }
 
+
     /**
      * Solve Part 2 of the day's problem.
+     * 7.0s to 0.1s performance improvements:
+     * - avoid using a 2d array and instead use a more efficient isValidPoint method to check if a point is valid
+     * - check the four points just outside the diamond shape of the sensor's range
+     * - avoid looping through the entire grid by checking only the perimeter of each sensor's range
      */
     public function solvePart2(mixed $input): int|string|null
     {
@@ -88,48 +93,58 @@ class Day15 extends Day
             ? 20        // for the example input
             : 4000000; // for the actual puzzle input
 
+        // create an array of sensors with their x, y, and distance to the closest beacon (manhattan distance)
         $sensors = $input->map(fn ($sensor) => [
             'x'        => $sensor['sensor']['x'],
             'y'        => $sensor['sensor']['y'],
             'distance' => abs($sensor['sensor']['x'] - $sensor['beacon']['x']) + abs($sensor['sensor']['y'] - $sensor['beacon']['y']),
         ])->toArray();
 
-        // for each row, check if there is a gap in the coverage
-        for ($y = 0; $y <= $max; $y++) {
-            $ranges = [];
-            foreach ($sensors as $sensor) {
-                $dy = abs($sensor['y'] - $y);
-                // if the row is within the sensor's range, add the range to the list
-                if ($dy <= $sensor['distance']) {
-                    $dx       = $sensor['distance'] - $dy;
-                    $ranges[] = [$sensor['x'] - $dx, $sensor['x'] + $dx];
-                }
-            }
+        // horizontal, vertical, and diagonal points just outside the diamond shape of the sensor's range
+        $points = [[-1, -1], [-1, 1], [1, -1], [1, 1]];
 
-            // sort ranges by start position
-            usort($ranges, fn ($a, $b) => $a[0] <=> $b[0]);
+        // check the perimeter of each sensor's range
+        foreach ($sensors as $sensor) {
+            // check points just outside the diamond shape of the sensor's range
+            for ($dx = 0; $dx <= $sensor['distance'] + 1; $dx++) {
+                $dy = $sensor['distance'] + 1 - $dx;
 
-            // check for gaps in the coverage
-            $x = 0;
-            foreach ($ranges as $range) {
-                if ($x < $range[0]) {
-                    // found the gap
-                    return $x * 4000000 + $y;
-                }
-                $x = max($x, $range[1] + 1);
-                if ($x > $max) {
-                    // out of bounds
-                    break;
-                }
-            }
+                foreach ($points as [$signX, $signY]) {
+                    $x = $sensor['x'] + $dx * $signX;
+                    $y = $sensor['y'] + $dy * $signY;
 
-            if ($x <= $max) {
-                // found the gap
-                return $x * 4000000 + $y;
+                    // check if the point is within the bounds of the grid
+                    if ($x >= 0 && $x <= $max && $y >= 0 && $y <= $max) {
+                        if ($this->isValidPoint($x, $y, $sensors, $max)) {
+                            // return the tuning frequency
+                            return $x * 4000000 + $y;
+                        }
+                    }
+                }
             }
         }
 
         return null;
+    }
+
+    /**
+     * check if a point is valid by ensuring it's outside the range of all sensors.
+     *
+     * @param int $x
+     * @param int $y
+     * @param array $sensors sensors with their x, y, and distance to the closest beacon
+     * @param int $max
+     * @return bool
+     */
+    protected function isValidPoint(int $x, int $y, array $sensors, int $max): bool
+    {
+        foreach ($sensors as $sensor) {
+            $distance = abs($x - $sensor['x']) + abs($y - $sensor['y']);
+            if ($distance <= $sensor['distance']) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
