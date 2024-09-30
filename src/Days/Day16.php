@@ -28,9 +28,52 @@ class Day16 extends Day
     public function solvePart1(mixed $input): int|string|null
     {
         $input = $this->parseInput($input);
-        dd($input);
+        $minute = 0;
+        $pressure = 0;
+        $openValves = [];
+        $valve = $input->first();
+        $openValve = false;
+        while ($minute < 30) {
+            ++$minute;
+            printf("Minute: %d current pressure: %d current valve: %s open valves: %s\n", $minute, $pressure, $valve['valve'], implode(', ', $openValves));
+            if ($openValve) {
+                printf("Opening %s releasing %d pressure\n", $openValve['valve'], $openValve['flow_rate']);
+                $openValves[] = $openValve['valve'];
+                $valve = $openValve;
+                $openValve = false;
+                continue;
+            }
+
+            // otherwise find the next valve with the highest flow rate
+            $nextValve = $valve['tunnels']->filter(fn (array $tunnel): bool => !in_array($tunnel['valve'], $openValves))->first();
+
+            if ($valve['flow_rate'] < $nextValve['flow_rate']) {
+                printf("Moving to %s\n", $nextValve['valve']);
+                $valve = $nextValve;
+                $openValves[] = $valve['valve'];
+                $open = true;
+
+            } else {
+                printf("Opening %s\n", $valve['valve']);
+                $openValves[] = $valve['valve'];
+                $pressure += $valve['flow_rate'];
+                $valve = null;
+            }
+            $pressure += array_sum(array_map(fn (string $valve): int => $input[$valve]['flow_rate'], $openValves));
+            printf("Minute: %d current pressure: %d current valve: %s open valves: %s\n", $minute, $pressure, $valve['valve'], implode(', ', $openValves));
+            dd($openValves);
+            // take the valve with the highest flow rate by shifting and getting the first key
+        }
+
+        dd($pressure);
+
 
         return null;
+    }
+
+    protected function tunnelWithHighestFlowRate(array $valves, array $openValves): array
+    {
+        return $valves->filter(fn (array $valve): bool => !in_array($valve['valve'], $openValves))->first();
     }
 
     /**
@@ -47,28 +90,34 @@ class Day16 extends Day
 
     /**
      * Parse the input data.
-     * @return Collection<int, array<string, string|int|array<int, string>>>
+     * 
+     * @return Collection<string, array<string, int|Collection<int, string>>>
      */
     protected function parseInput(mixed $input): Collection
     {
-        $input = is_array($input) ? $input : explode("\n", $input);
-
-        return collect($input)
-            ->map(function (string $line): array {
-                $valve    = null;
-                $flowRate = null;
-                $tunnels  = null;
-                if (preg_match('/Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.+)/', $line, $matches)) {
-                    $valve    = $matches[1];
-                    $flowRate = (int)$matches[2];
-                    $tunnels  = explode(', ', $matches[3]);
-                }
+        return collect(is_array($input) ? $input : explode("\n", $input))
+        ->mapWithKeys(function (string $line): array {
+            if (preg_match('/Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.+)/', $line, $matches)) {
+                [, $valve, $flowRate, $tunnels] = $matches;
                 return [
-                    'valve'     => $valve,
-                    'flow_rate' => $flowRate,
-                    'tunnels'   => $tunnels,
+                    $valve => [
+                        'valve'     => $valve,
+                        'flow_rate' => (int) $flowRate,
+                        'tunnels'   => explode(', ', $tunnels),
+                    ]
                 ];
-            })
-        ;
+            }
+            return [];
+        });
+
+        /* return $valves->map(function (array $valve) use ($valves) {
+            $valve['tunnels'] = collect($valve['tunnels'])
+                ->map(fn (string $tunnel): array => ['valve' => $tunnel, 'flow_rate' => $valves[$tunnel]['flow_rate']])
+                ->sortByDesc(fn (array $tunnel): int => $tunnel['flow_rate'])
+                //->toArray();
+                ;
+
+            return $valve;
+        }); */
     }
 }

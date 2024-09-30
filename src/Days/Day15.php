@@ -115,7 +115,7 @@ class Day15 extends Day
 
                     // check if the point is within the bounds of the grid
                     if ($x >= 0 && $x <= $max && $y >= 0 && $y <= $max) {
-                        if ($this->isValidPoint($x, $y, $sensors, $max)) {
+                        if ($this->isValidPoint($x, $y, $sensors)) {
                             // return the tuning frequency
                             return $x * 4000000 + $y;
                         }
@@ -133,10 +133,9 @@ class Day15 extends Day
      * @param int $x
      * @param int $y
      * @param array $sensors sensors with their x, y, and distance to the closest beacon
-     * @param int $max
      * @return bool
      */
-    protected function isValidPoint(int $x, int $y, array $sensors, int $max): bool
+    protected function isValidPoint(int $x, int $y, array $sensors): bool
     {
         foreach ($sensors as $sensor) {
             $distance = abs($x - $sensor['x']) + abs($y - $sensor['y']);

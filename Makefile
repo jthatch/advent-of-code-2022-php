@@ -33,7 +33,7 @@ endif
 runArgs:=$(onlyThisDay) $(onlyThisPart) $(withExamples)
 
 help: ## This help.
-	@printf "\033[32m---------------------------------------------------------------------------\n  Advent of Code 2021 - James Thatcher\n  Current Day:\033[33m $(latestDay)\033[32m\n---------------------------------------------------------------------------\033[0m\n"
+	@printf "\033[32m---------------------------------------------------------------------------\n  Advent of Code 2022 - James Thatcher\n  Current Day:\033[33m $(latestDay)\033[32m\n---------------------------------------------------------------------------\033[0m\n"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
