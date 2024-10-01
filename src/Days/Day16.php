@@ -26,8 +26,6 @@ class Day16 extends Day
     protected array $valves                = [];
     protected static array $cache          = [];
     protected array $cache2                = [];
-    protected const MAX_CACHE_SIZE         = 1000000; // Reduced cache size
-    private const CACHE_EVICTION_THRESHOLD = 900000; // Threshold for cache cleanup
 
     public function solvePart1(mixed $input): int|string|null
     {
@@ -168,24 +166,7 @@ class Day16 extends Day
         // Cache the result with more aggressive eviction strategy
         $this->cache2[$key] = $maxPressure;
 
-        /* if (count(self::$cache) > self::CACHE_EVICTION_THRESHOLD) {
-            $this->cleanupCache();
-        } */
-
         return $maxPressure;
-    }
-
-    private function cleanupCache(): void
-    {
-        $cacheSize     = count(self::$cache);
-        $itemsToRemove = $cacheSize - self::MAX_CACHE_SIZE / 2;
-
-        if ($itemsToRemove > 0) {
-            $keys = array_rand(self::$cache, $itemsToRemove);
-            foreach ($keys as $key) {
-                unset(self::$cache[$key]);
-            }
-        }
     }
 
     protected function parseInput(mixed $input): Collection
