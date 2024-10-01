@@ -22,38 +22,38 @@ class Day16 extends Day
     Valve JJ has flow rate=21; tunnel leads to valve II
     EOF;
 
-    protected array $flowRates             = [];
-    protected array $valves                = [];
-    protected array $valvesToIds         = [];
-    protected static array $cache          = [];
-    protected array $cache2                = [];
+    protected array $flowRates    = [];
+    protected array $valves       = [];
+    protected array $valvesToIds  = [];
+    protected static array $cache = [];
+    protected array $cache2       = [];
 
-    private const CACHE_FILE = __DIR__ . '/../../day16_cache.php';
+    private const CACHE_FILE    = __DIR__.'/../../day16_cache.php';
     protected bool $saveToCache = false;
 
     public function solvePart1(mixed $input): int|string|null
     {
-        self::$cache     = [];
-        $valves          = $this->parseInput($input);
-        $this->valves    = $valves->toArray();
+        self::$cache       = [];
+        $valves            = $this->parseInput($input);
+        $this->valves      = $valves->toArray();
         $this->valvesToIds = $valves->pluck('id', 'valve')->toArray();
-        $this->flowRates = $valves->pluck('flow_rate', 'valve')->toArray();
+        $this->flowRates   = $valves->pluck('flow_rate', 'valve')->toArray();
 
         return $this->findMaxPressure('AA', [], 30);
     }
 
     public function solvePart2(mixed $input): int|string|null
     {
-        $valves          = $this->parseInput($input);
+        $valves = $this->parseInput($input);
         //dump($valves['AA']);
-        $this->saveToCache = $valves['AA']['id'] !== 0;
-        self::$cache     = [];
-        $this->cache2    = $this->saveToCache ? $this->loadCache() : [];
+        $this->saveToCache = 0 !== $valves['AA']['id'];
+        self::$cache       = [];
+        $this->cache2      = $this->saveToCache ? $this->loadCache() : [];
         printf("save to cache: %s, Cache size: %d memory: %d\n", $this->saveToCache ? 'true' : 'false', count($this->cache2), memory_get_usage(true));
         //dd('got here');
-        $this->valves    = $valves->toArray();
+        $this->valves      = $valves->toArray();
         $this->valvesToIds = $valves->pluck('id', 'valve')->toArray();
-        $this->flowRates = $valves->pluck('flow_rate', 'valve')->toArray();
+        $this->flowRates   = $valves->pluck('flow_rate', 'valve')->toArray();
 
         $result = $this->findMaxPressureWithElephant('AA', 'AA', [], 26);
 
@@ -115,7 +115,7 @@ class Day16 extends Day
         static $maxDepthReached = 0;
         static $maxValvesOpened = 0;
 
-        $currentDepth = 26 - $remainingTime;
+        $currentDepth      = 26 - $remainingTime;
         $valvesOpenedCount = count($openValves);
 
         $maxDepthReached = max($maxDepthReached, $currentDepth);
@@ -130,9 +130,9 @@ class Day16 extends Day
         }
 
         // Early termination check
-        $unopenedValves = array_diff(array_keys($this->flowRates), $openValves);
+        $unopenedValves    = array_diff(array_keys($this->flowRates), $openValves);
         $potentialPressure = array_sum(array_intersect_key($this->flowRates, array_flip($unopenedValves))) * $remainingTime;
-        if ($potentialPressure === 0) {
+        if (0 === $potentialPressure) {
             $this->cache2[$key] = 0;
             return 0;
         }
@@ -144,12 +144,16 @@ class Day16 extends Day
 
         //$cacheCount++;
         static $lastReportedCount = 0;
-        $cacheCount = count($this->cache2);
+        $cacheCount               = count($this->cache2);
         if ($this->saveToCache && $cacheCount >= $lastReportedCount + 100000) {
-            $depthProgress = ($maxDepthReached / 26) * 100;
+            $depthProgress = ($maxDepthReached / 26)                                    * 100;
             $valveProgress = ($maxValvesOpened / count(array_filter($this->flowRates))) * 100;
-            printf(" Cache count: %d (Depth: %.2f%%, Valves: %.2f%%)\n", 
-                   $cacheCount, $depthProgress, $valveProgress);
+            printf(
+                " Cache count: %d (Depth: %.2f%%, Valves: %.2f%%)\n",
+                $cacheCount,
+                $depthProgress,
+                $valveProgress
+            );
             $this->reportLongRunning();
             $lastReportedCount = $cacheCount - ($cacheCount % 100000);
         }
@@ -216,7 +220,7 @@ class Day16 extends Day
         $this->cache2[$key] = $maxPressure;
 
         static $lastSaveTime = 0;
-        $currentTime = microtime(true);
+        $currentTime         = microtime(true);
         if ($currentTime - $lastSaveTime > 30 && $this->saveToCache) { // Save every 30 seconds
             printf("Saving %d keys to cache\n", count($this->cache2));
             $this->saveCache();
@@ -236,8 +240,8 @@ class Day16 extends Day
      * @return integer
      */
 
-     protected function createBitmaskKey(array $valveNames, array $openValves, int $remainingTime): int
-     {
+    protected function createBitmaskKey(array $valveNames, array $openValves, int $remainingTime): int
+    {
         $bitmask = 0;
 
         // Encode valve names (2 valves, 7 bits each)
@@ -256,12 +260,12 @@ class Day16 extends Day
 
         return $bitmask;
     }
-    
+
     protected function parseInput(mixed $input): Collection
     {
         $id = 0;
         return collect(is_array($input) ? $input : explode("\n", $input))
-            ->mapWithKeys(function (string $line) use (&$id) : array {
+            ->mapWithKeys(function (string $line) use (&$id): array {
                 if (preg_match('/Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.+)/', $line, $matches)) {
                     [, $valve, $flowRate, $tunnels] = $matches;
                     return [
@@ -288,7 +292,7 @@ class Day16 extends Day
 
     private function saveCache(): void
     {
-        $cacheContent = "<?php\nreturn " . var_export($this->cache2, true) . ";\n";
+        $cacheContent = "<?php\nreturn ".var_export($this->cache2, true).";\n";
         file_put_contents(self::CACHE_FILE, $cacheContent);
         //$this->cacheModified = false;
     }

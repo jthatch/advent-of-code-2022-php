@@ -7,6 +7,8 @@ namespace App\Runner;
 use App\Contracts\Day;
 use App\DayFactory;
 use Generator;
+use Exception;
+use Fiber;
 
 class Runner implements RunnerInterface
 {
@@ -66,13 +68,13 @@ class Runner implements RunnerInterface
         $startTime = microtime(true);
         $method    = "solvePart{$part}";
 
-        $isLongRunning = false;
+        $isLongRunning  = false;
         $lastReportTime = $startTime;
 
-        $day->setLongRunningCallback(function () use (&$isLongRunning, &$lastReportTime, $startTime, $part) {
+        $day->setLongRunningCallback(function () use (&$isLongRunning, &$lastReportTime, $startTime, $part): void {
             $currentTime = microtime(true);
             if ($currentTime - $lastReportTime >= 1) {
-                $isLongRunning = true;
+                $isLongRunning  = true;
                 $lastReportTime = $currentTime;
                 printf("\r%s\r", str_repeat(" ", 80));
                 printf("\r    Part{$part} \e[1;33mCalculating...\e[0m\n");
@@ -80,9 +82,7 @@ class Runner implements RunnerInterface
                 flush();
             }
         });
-        $solveFiber = new \Fiber(function () use ($day, $method) {
-            return $day->$method($day->input);
-        });
+        $solveFiber = new Fiber(fn () => $day->$method($day->input));
 
         $solveFiber->start();
 
@@ -97,9 +97,9 @@ class Runner implements RunnerInterface
                 // Clear the line before printing the result
                 printf("\r%s\r", str_repeat(" ", 80));
             }
-            
+
             printf("    Part{$part} \e[1;32m%s\e[0m\n", $result);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             printf("    Part{$part} \e[1;31mError: %s\e[0m\n", $e->getMessage());
         }
 
@@ -202,10 +202,10 @@ class Runner implements RunnerInterface
     protected function formatTime(float $time): string
     {
         return match(true) {
-            $time < 10    => sprintf('%.5fs', $time),
-            $time < 100   => sprintf('%.4fs', $time),
-            $time < 1000  => sprintf('%.3fs', $time),
-            default       => sprintf('%.2fs', $time),
+            $time < 10   => sprintf('%.5fs', $time),
+            $time < 100  => sprintf('%.4fs', $time),
+            $time < 1000 => sprintf('%.3fs', $time),
+            default      => sprintf('%.2fs', $time),
         };
     }
 
