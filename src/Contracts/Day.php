@@ -14,6 +14,9 @@ abstract class Day implements DayInterface
     /** string|array EXAMPLE2 */
     public const EXAMPLE2 = '';
 
+    /** @var callable|null a callback to report memory usage on long running operations */
+    protected $longRunningCallback = null;
+
     /**
      * @param array<int, string> $input
      */
@@ -54,5 +57,27 @@ abstract class Day implements DayInterface
     final public function day(): string
     {
         return (new ReflectionClass($this))->getShortName();
+    }
+
+    /**
+     * sets a callback to report memory usage on long running operations
+     * @param callable $callback
+     * @return $this
+     */
+    public function setLongRunningCallback(callable $callback): self
+    {
+        $this->longRunningCallback = $callback;
+
+        return $this;
+    }
+
+    /**
+     * reports memory usage on long running operations
+     */
+    protected function reportLongRunning(): void
+    {
+        if ($this->longRunningCallback && is_callable($this->longRunningCallback)) {
+            ($this->longRunningCallback)();
+        }
     }
 }

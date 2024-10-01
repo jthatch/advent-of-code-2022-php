@@ -65,8 +65,46 @@ class Runner implements RunnerInterface
     {
         $startTime = microtime(true);
         $method    = "solvePart{$part}";
-        printf("    Part{$part} \e[1;32m%s\e[0m\n", $day->$method($day->input));
+
+        $isLongRunning = false;
+        $lastReportTime = $startTime;
+
+        $day->setLongRunningCallback(function () use (&$isLongRunning, &$lastReportTime, $startTime, $part) {
+            $currentTime = microtime(true);
+            if ($currentTime - $lastReportTime >= 1) {
+                $isLongRunning = true;
+                $lastReportTime = $currentTime;
+                printf("\r%s\r", str_repeat(" ", 80));
+                printf("\r    Part{$part} \e[1;33mCalculating...\e[0m\n");
+                $this->report($startTime, true);
+                flush();
+            }
+        });
+        $solveFiber = new \Fiber(function () use ($day, $method) {
+            return $day->$method($day->input);
+        });
+
+        $solveFiber->start();
+
+        while (!$solveFiber->isTerminated()) {
+            $solveFiber->resume();
+        }
+
+        try {
+            $result = $solveFiber->getReturn();
+
+            if ($isLongRunning) {
+                // Clear the line before printing the result
+                printf("\r%s\r", str_repeat(" ", 80));
+            }
+            
+            printf("    Part{$part} \e[1;32m%s\e[0m\n", $result);
+        } catch (\Exception $e) {
+            printf("    Part{$part} \e[1;31mError: %s\e[0m\n", $e->getMessage());
+        }
+
         $this->report($startTime);
+
     }
 
     protected function runPartExamples(int $part, Day $day): void
@@ -157,8 +195,18 @@ class Runner implements RunnerInterface
             "      \e[2mMem[%s] Peak[%s] Time[%s]\e[0m\n",
             $this->colorise($this->humanReadableBytes($mem), $mem, 900000, 2000000),
             $this->colorise($this->humanReadableBytes($memPeak), $memPeak, 5e+7, 1e+8),
-            $this->colorise(sprintf('%.5fs', $time), $time, 0.1, 0.75),
+            $this->colorise($this->formatTime($time), $time, 0.1, 0.75),
         );
+    }
+
+    protected function formatTime(float $time): string
+    {
+        return match(true) {
+            $time < 10    => sprintf('%.5fs', $time),
+            $time < 100   => sprintf('%.4fs', $time),
+            $time < 1000  => sprintf('%.3fs', $time),
+            default       => sprintf('%.2fs', $time),
+        };
     }
 
     protected function colorise(string $value, float|int $metric, float|int $warnThreshold, float|int $errorThreshold): string
