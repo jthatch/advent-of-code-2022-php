@@ -32,6 +32,10 @@ RUN apt update -y \
 USER root
 COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
+# set php memory limit to 1G for use when running php via the shell as makefile does this automatically
+RUN echo "memory_limit = 1G" > /usr/local/etc/php/conf.d/memory-limit.ini
+
+
 # composer
 # disabled to keep sizes down, we'll need git and zip added to the image in order to use composer
 COPY --from=composer:2.2.6 /usr/bin/composer /usr/local/bin/composer
