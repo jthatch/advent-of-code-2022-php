@@ -26,6 +26,7 @@ class ParseCliArgs
             days: $this->options['day']->value   ?? null,
             parts: $this->options['part']->value ?? null,
             withExamples: (bool) ($this->options['examples']->value ?? false),
+            wantsHelp: (bool) ($this->options['help']->value ?? false),
         );
     }
 
