@@ -8,16 +8,14 @@ use App\Runner\DTO\CliArg;
 use App\Runner\DTO\CliArgType;
 use RuntimeException;
 
-class ParseCliArgs
+readonly class ParseCliArgs
 {
-    /**
-     * @var array<string, CliArg>
-     */
-    public readonly array $options;
+    /** @var array<string, CliArg> */
+    public array $options;
 
     public function __construct(CliArg ...$cliArgs)
     {
-        $this->options = $this->setCliArgs(...$cliArgs);
+        $this->options = $this->parseArgs(...$cliArgs);
     }
 
     public function getOptions(): Options
@@ -26,69 +24,80 @@ class ParseCliArgs
             days: $this->options['day']->value   ?? null,
             parts: $this->options['part']->value ?? null,
             withExamples: (bool) ($this->options['examples']->value ?? false),
+            wantsHelp: (bool) ($this->options['help']->value ?? false)
         );
     }
 
-    /**
-     * @param CliArg ...$args
-     *
-     * @return array<string, CliArg>
-     */
-    protected function setCliArgs(CliArg ...$args): array
+    /** @return array<string, CliArg> */
+    protected function parseArgs(CliArg ...$args): array
     {
-        $options       = array_merge(...array_map(fn (CliArg $a) => [$a->longName => $a], $args));
-        $longOptions   = array_map(fn (CliArg $a) => $a->asGetOpt(), $options);
-        $getOptOptions = getopt('', $longOptions);
-        foreach ($getOptOptions as $key => $value) {
-            if (!isset($options[$key])) {
-                throw new RuntimeException('Invalid option: '.$key);
-            }
-
-            $option = &$options[$key];
-            if (CliArgType::NO_VALUE === $option->type) {
-                // handle counter-intuitive behaviour of "no value" options being set to false
-                // @see: https://www.php.net/manual/en/function.getopt.php#123135
-                $option->setValue(false === $value);
-            } else {
-                $option->setValue($this->parseRangeAndCommaSeparated($value));
+        // build index of args by long name
+        $argsByLongName  = [];
+        $argsByShortName = [];
+        foreach ($args as $arg) {
+            $argsByLongName[$arg->longName] = $arg;
+            if ('' !== $arg->shortName) {
+                $argsByShortName[$arg->shortName] = $arg;
             }
         }
 
-        return $options;
+        // build getopt format strings
+        $shortOpts = implode('', array_map(
+            fn (CliArg $a) => $a->shortName.$a->type->value,
+            array_filter($args, fn (CliArg $a) => '' !== $a->shortName)
+        ));
+        $longOpts = array_map(fn (CliArg $a) => $a->asGetOpt(), $args);
+
+        // parse cli arguments
+        $parsed = getopt($shortOpts, $longOpts);
+
+        // process parsed options
+        $result = $argsByLongName;
+        foreach ($parsed as $key => $value) {
+            // handle both short and long names
+            $arg = $argsByLongName[$key] ?? $argsByShortName[$key] ?? null;
+
+            if (null === $arg) {
+                throw new RuntimeException("Invalid option: {$key}");
+            }
+
+            $processedValue = match ($arg->type) {
+                // handle counter-intuitive behaviour of "no value" options being set to false
+                // @see: https://www.php.net/manual/en/function.getopt.php#123135
+                CliArgType::NO_VALUE => false === $value,
+                default              => $this->parseRangeAndCommaSeparated($value)
+            };
+
+            $result[$arg->longName] = $arg->withValue($processedValue);
+        }
+
+        return $result;
     }
 
-    /**
-     * Returns an array containing the unique values found in the comma-separated and ranged list, including combinations of both.
-     * Example: "1-3,5" would result in [1,2,3,5].
-     *
-     * @param string|array<int, mixed>|false $input
-     * @return array<int, int>
-     */
+    /** @return array<int, int> */
     protected function parseRangeAndCommaSeparated(string|array|false $input): array
     {
         if (!is_string($input)) {
             return [];
         }
 
-        $chunks = explode(',', $input);
-        $values = array_map('intval', array_merge([], ...array_map(
-            fn (string $chunk): array => str_contains($chunk, '-')
-                ? range((int) explode('-', $chunk, 2)[0], (int) (explode('-', $chunk, 2)[1] ?? explode('-', $chunk, 2)[0]))
-                : [$chunk],
-            $chunks
-        )));
-        sort($values);
+        $result = [];
 
-        return $values;
-    }
+        // process comma-separated chunks
+        foreach (explode(',', $input) as $chunk) {
+            $chunk = mb_trim($chunk);
 
-    /**
-     * @param array<string> $longOpts
-     *
-     * @return array<string>
-     */
-    protected function optionsAsShortOpt(array $longOpts): array
-    {
-        return array_map(static fn (string $o): string => $o[0].preg_replace('/[a-z]+/', '', $o), $longOpts);
+            // handle range (e.g., "1-5")
+            if (str_contains($chunk, '-')) {
+                [$start, $end] = array_map('intval', explode('-', $chunk, 2));
+                $result        = [...$result, ...range($start, $end)];
+            } else {
+                // single value
+                $result[] = (int) $chunk;
+            }
+        }
+
+        sort($result);
+        return array_unique($result);
     }
 }

@@ -8,21 +8,18 @@ use App\Contracts\Day;
 use App\DayFactory;
 use Generator;
 use Exception;
-use Fiber;
 
-class Runner implements RunnerInterface
+readonly class Runner implements RunnerInterface
 {
-    /**
-     * @param Options $options
-     * @param DayFactory $factory
-     * @param array<int, int>|null $days
-     */
+    /** @var array<int, int>|null */
+    private ?array $days;
+
     public function __construct(
-        protected Options $options,
-        protected DayFactory $factory = new DayFactory(),
-        protected ?array $days = null
+        private Options $options,
+        private DayFactory $factory = new DayFactory(),
+        ?array $days = null
     ) {
-        $this->days ??= $this->options->days;
+        $this->days = $days ?? $this->options->days;
     }
 
     public function run(): void
@@ -47,11 +44,15 @@ class Runner implements RunnerInterface
 
     protected function runDay(Day $day): void
     {
-        $this->options->withExamples && $this->runExamples($day);
+        if ($this->options->withExamples) {
+            $this->runExamples($day);
+        }
 
         printf("\e[1;4m%s\e[0m\n", $day->day());
         foreach ([1, 2] as $part) {
-            $this->shouldRunPart($part) && $this->runPart($day, $part);
+            if ($this->shouldRunPart($part)) {
+                $this->runPart($day, $part);
+            }
         }
     }
 
@@ -59,7 +60,9 @@ class Runner implements RunnerInterface
     {
         printf("\e[1;4m%s Examples\e[0m\n", $day->day());
         foreach ([1, 2] as $part) {
-            $this->shouldRunPart($part) && $this->runPartExamples($part, $day);
+            if ($this->shouldRunPart($part)) {
+                $this->runPartExamples($part, $day);
+            }
         }
     }
 
@@ -68,43 +71,14 @@ class Runner implements RunnerInterface
         $startTime = microtime(true);
         $method    = "solvePart{$part}";
 
-        $isLongRunning  = false;
-        $lastReportTime = $startTime;
-
-        $day->setLongRunningCallback(function () use (&$isLongRunning, &$lastReportTime, $startTime, $part): void {
-            $currentTime = microtime(true);
-            if ($currentTime - $lastReportTime >= 1) {
-                $isLongRunning  = true;
-                $lastReportTime = $currentTime;
-                printf("\r%s\r", str_repeat(" ", 80));
-                printf("\r    Part{$part} \e[1;33mCalculating...\e[0m\n");
-                $this->report($startTime, true);
-                flush();
-            }
-        });
-        $solveFiber = new Fiber(fn () => $day->$method($day->input));
-
-        $solveFiber->start();
-
-        while (!$solveFiber->isTerminated()) {
-            $solveFiber->resume();
-        }
-
         try {
-            $result = $solveFiber->getReturn();
-
-            if ($isLongRunning) {
-                // Clear the line before printing the result
-                printf("\r%s\r", str_repeat(" ", 80));
-            }
-
+            $result = $day->$method($day->input);
             printf("    Part{$part} \e[1;32m%s\e[0m\n", $result);
         } catch (Exception $e) {
             printf("    Part{$part} \e[1;31mError: %s\e[0m\n", $e->getMessage());
         }
 
         $this->report($startTime);
-
     }
 
     protected function runPartExamples(int $part, Day $day): void
@@ -114,19 +88,16 @@ class Runner implements RunnerInterface
         $solveMethod   = "solvePart{$part}";
         $examples      = $day->$exampleMethod();
 
-        is_array($examples)
-            ? $this->runMultipleExamples($part, $day, $examples, $solveMethod)
-            : $this->runSingleExample($part, $day, $examples, $solveMethod);
+        if (is_array($examples)) {
+            $this->runMultipleExamples($part, $day, $examples, $solveMethod);
+        } else {
+            $this->runSingleExample($part, $day, $examples, $solveMethod);
+        }
 
         $this->report($startTime);
     }
 
-    /**
-     * @param int $part
-     * @param Day $day
-     * @param array<int, mixed> $examples
-     * @param string $solveMethod
-     */
+    /** @param array<int, mixed> $examples */
     protected function runMultipleExamples(int $part, Day $day, array $examples, string $solveMethod): void
     {
         foreach ($examples as $i => $example) {
@@ -140,18 +111,16 @@ class Runner implements RunnerInterface
         printf("    Part%d Example \e[1;32m%s\e[0m\n", $part, $day->$solveMethod($example));
     }
 
-    /**
-     * @return Generator<Day>
-     */
+    /** @return Generator<Day> */
     protected function dayGenerator(): Generator
     {
-        return null !== $this->days
-            ? (function () {
-                while (!empty($this->days)) {
-                    yield $this->factory->create((int) array_shift($this->days));
-                }
-            })()
-            : $this->factory->allAvailableDays();
+        if (null !== $this->days) {
+            foreach ($this->days as $day) {
+                yield $this->factory->create($day);
+            }
+        } else {
+            yield from $this->factory->allAvailableDays();
+        }
     }
 
     protected function showStart(): void
@@ -196,8 +165,8 @@ class Runner implements RunnerInterface
 
         printf(
             "      \e[2mMem[%s] Peak[%s] Time[%s]\e[0m\n",
-            $this->colorise($this->humanReadableBytes($mem), $mem, 900000, 2000000),
-            $this->colorise($this->humanReadableBytes($memPeak), $memPeak, 5e+7, 1e+8),
+            $this->colorise($this->humanReadableBytes($mem), $mem, 900_000, 2_000_000),
+            $this->colorise($this->humanReadableBytes($memPeak), $memPeak, 50_000_000, 100_000_000),
             $this->colorise($this->formatTime($time), $time, 0.1, 0.75),
         );
     }

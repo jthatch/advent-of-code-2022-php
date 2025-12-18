@@ -44,14 +44,13 @@ use App\Runner\Runner;
 require 'vendor/autoload.php';
 
 $cliArgs = [
-    new CliArg(longName: 'day', type: CliArgType::WITH_VALUE),
-    new CliArg(longName: 'part', type: CliArgType::WITH_VALUE),
-    new CliArg('examples', type: CliArgType::NO_VALUE),
-    new CliArg('help', type: CliArgType::NO_VALUE),
+    new CliArg(longName: 'day', shortName: 'd', type: CliArgType::WITH_VALUE),
+    new CliArg(longName: 'part', shortName: 'p', type: CliArgType::WITH_VALUE),
+    new CliArg(longName: 'examples', shortName: 'e', type: CliArgType::NO_VALUE),
+    new CliArg(longName: 'help', shortName: 'h', type: CliArgType::NO_VALUE),
 ];
 
-$cli = new ParseCliArgs(...$cliArgs);
-
+$cli     = new ParseCliArgs(...$cliArgs);
 $options = $cli->getOptions();
 $runner  = new Runner($options, new DayFactory());
 
