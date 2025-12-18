@@ -55,7 +55,7 @@ class Day1 extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            ->map(fn ($line) => trim($line))
+            ->map(fn ($line) => mb_trim($line))
             ->chunkWhile(fn ($value) => '' !== $value)
             ->map(fn ($chunk) => $chunk->values())
             ->map(fn ($chunk) => $chunk->filter(fn ($value) => '' !== $value)->values())

@@ -45,7 +45,7 @@ uid        :=$(shell id -u)
 gid        :=$(shell id -g)
 
 # define our reusable docker run commands
-# For Day13 I needed the gmp library, so I made my own docker image based on php:8.1-cli (see Dockerfile)
+# Custom docker image with PHP 8.5 and required extensions (see Dockerfile)
 define DOCKER_RUN
 docker run -it --rm --init \
 	--name "$(image-name)" \

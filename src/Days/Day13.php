@@ -132,7 +132,7 @@ class Day13 extends Day
         $input = is_array($input) ? $input : explode("\n", $input);
 
         return collect($input)
-            ->map(fn ($line) => trim($line))
+            ->map(fn ($line) => mb_trim($line))
             ->chunkWhile(fn ($value) => '' !== $value)
             ->map(fn ($chunk) => $chunk->filter(fn ($value) => '' !== $value))
             ->map(fn ($chunk) => $chunk->map(fn ($line) => json_decode($line, true))->values()->toArray())

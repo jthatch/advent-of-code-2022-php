@@ -1,4 +1,5 @@
 <?php
+
 /** Advent of Code 2022 PHP runner.
  *
  * Usage:

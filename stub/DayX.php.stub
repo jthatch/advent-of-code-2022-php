@@ -9,9 +9,9 @@ use Illuminate\Support\Collection;
 
 class DayX extends Day
 {
-    public const EXAMPLE1 = <<<eof
+    public const EXAMPLE1 = <<<EOF
     // todo: add example 1
-    eof;
+    EOF;
 
     /**
      * Solve Part 1 of the day's problem.

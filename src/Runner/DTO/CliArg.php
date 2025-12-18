@@ -6,10 +6,11 @@ namespace App\Runner\DTO;
 
 class CliArg
 {
-    public mixed $value;
-
-    public function __construct(public readonly string $longName, public readonly CliArgType $type)
-    {
+    public function __construct(
+        public readonly string $longName,
+        public readonly CliArgType $type,
+        public mixed $value = null
+    ) {
     }
 
     /**
@@ -29,6 +30,6 @@ class CliArg
 
     public function value(): mixed
     {
-        return $this->value ?? null;
+        return $this->value;
     }
 }

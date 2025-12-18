@@ -104,7 +104,7 @@ class Day5 extends Day
     {
         $stackLine = $rawDiagram->pop(); //  " 1   2   3 "
         // create an empty array keyed by the stack columns 1,2,3 etc
-        $stackNumbers = preg_split("/\s+/", trim((string) $stackLine));
+        $stackNumbers = preg_split("/\s+/", mb_trim((string) $stackLine));
         if (false === $stackNumbers) {
             throw new RuntimeException('Failed to parse stack numbers');
         }
@@ -113,7 +113,7 @@ class Day5 extends Day
         // loop over each remaining diagram line, adding the crates to the correct stack column
         $rawDiagram->each(function ($line) use (&$stacks): void {
             $crates = collect(mb_str_split($line, 4))
-                ->map(fn ($char) => trim(str_replace(['[', ']'], '', $char)));
+                ->map(fn ($char) => mb_trim(str_replace(['[', ']'], '', $char)));
             foreach ($stacks as &$stack) {
                 $crate = $crates->shift();
                 if ('' !== $crate) {

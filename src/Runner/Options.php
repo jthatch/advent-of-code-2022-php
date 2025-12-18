@@ -6,7 +6,17 @@ namespace App\Runner;
 
 readonly class Options
 {
-    public function __construct(public ?array $days, public ?array $parts, public bool $withExamples, public bool $wantsHelp = false)
-    {
+    /**
+     * @param array<int>|null $days
+     * @param array<int>|null $parts
+     * @param bool $withExamples
+     * @param bool $wantsHelp
+     */
+    public function __construct(
+        public ?array $days,
+        public ?array $parts,
+        public bool $withExamples,
+        public bool $wantsHelp = false
+    ) {
     }
 }

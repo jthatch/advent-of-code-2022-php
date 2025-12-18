@@ -140,6 +140,9 @@ class Runner implements RunnerInterface
         printf("    Part%d Example \e[1;32m%s\e[0m\n", $part, $day->$solveMethod($example));
     }
 
+    /**
+     * @return Generator<Day>
+     */
     protected function dayGenerator(): Generator
     {
         return null !== $this->days
@@ -154,7 +157,7 @@ class Runner implements RunnerInterface
     protected function showStart(): void
     {
         printf(
-            <<<eof
+            <<<EOF
             \e[32m---------------------------------------------
             |\e[0m Advent of Code 2022 PHP - James Thatcher\e[32m  |
             |\e[0m                                         \e[32m  |
@@ -163,7 +166,7 @@ class Runner implements RunnerInterface
             |\e[0;37m With Examples: \e[2;37m%-25s \e[0;32m |
             ---------------------------------------------\e[0m
 
-            eof,
+            EOF,
             null === $this->options->days ? 'all' : implode(',', $this->options->days),
             null === $this->options->parts ? '1,2' : implode(',', $this->options->parts),
             $this->options->withExamples ? 'yes' : 'no'
@@ -172,9 +175,9 @@ class Runner implements RunnerInterface
 
     protected function showHelp(): void
     {
-        echo <<<eof
+        echo <<<EOF
             Advent of Code 2022 PHP runner.
-            
+
             Usage:
              php run.php <options>
                 -d,--day=PATTERN          Only run days that match pattern (range or comma-separated list)
@@ -182,7 +185,7 @@ class Runner implements RunnerInterface
                 -e,--examples             Runs the examples
                 -h,--help                 This help message
 
-            eof;
+            EOF;
     }
 
     protected function report(float $startTime): void
@@ -201,7 +204,7 @@ class Runner implements RunnerInterface
 
     protected function formatTime(float $time): string
     {
-        return match(true) {
+        return match (true) {
             $time < 10   => sprintf('%.5fs', $time),
             $time < 100  => sprintf('%.4fs', $time),
             $time < 1000 => sprintf('%.3fs', $time),

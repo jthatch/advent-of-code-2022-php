@@ -58,7 +58,7 @@ class ParseCliArgs
     }
 
     /**
-     * Returns an array containing the unique values found in the comma-separated and ranged list, including combinations of both
+     * Returns an array containing the unique values found in the comma-separated and ranged list, including combinations of both.
      * Example: "1-3,5" would result in [1,2,3,5].
      *
      * @param string|array<int, mixed>|false $input
@@ -70,15 +70,13 @@ class ParseCliArgs
             return [];
         }
 
-        $values = array_map('intval', array_merge([], ...array_map(function (string $chunk) {
-            if (str_contains($chunk, '-')) {
-                $parts = explode('-', $chunk, 2);
-                $start = (int) $parts[0];
-                $end   = (int) ($parts[1] ?? $start);
-                return range($start, $end);
-            }
-            return [$chunk];
-        }, explode(',', $input))));
+        $chunks = explode(',', $input);
+        $values = array_map('intval', array_merge([], ...array_map(
+            fn (string $chunk): array => str_contains($chunk, '-')
+                ? range((int) explode('-', $chunk, 2)[0], (int) (explode('-', $chunk, 2)[1] ?? explode('-', $chunk, 2)[0]))
+                : [$chunk],
+            $chunks
+        )));
         sort($values);
 
         return $values;
