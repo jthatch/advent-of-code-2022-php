@@ -25,106 +25,98 @@ class Day16 extends Day
 
     protected array $flowRates     = [];
     protected array $valves        = [];
-    protected array $valvesToIds   = [];
-    protected static array $cache  = [];
     protected array $distances     = [];
     protected array $nonZeroValves = [];
+    protected array $valveToIndex  = [];
+
+    // separate caches for part 1 and part 2
+    protected static array $part1Cache = [];
+    protected static array $part2Cache = [];
 
     public function solvePart1(mixed $input): int|string|null
     {
-        self::$cache       = [];
-        $valves            = $this->parseInput($input);
-        $this->valves      = $valves->toArray();
-        $this->valvesToIds = $valves->pluck('id', 'valve')->toArray();
-        $this->flowRates   = $valves->pluck('flow_rate', 'valve')->toArray();
+        self::$part1Cache = [];
+        $this->initializeGraph($input);
 
-        return $this->findMaxPressure('AA', [], 30);
+        // create bitmask representing all unopened valves
+        $allValves = (1 << count($this->nonZeroValves)) - 1;
+
+        return $this->findMaxPressure('AA', $allValves, 30, self::$part1Cache);
     }
 
-    public function solvePart2(mixed $input): int|string|null
+    protected function initializeGraph(mixed $input): void
     {
-        self::$cache         = [];
-        $valves              = $this->parseInput($input);
-        $this->valves        = $valves->toArray();
-        $this->flowRates     = $valves->pluck('flow_rate', 'valve')->toArray();
-        $this->distances     = $this->calculateDistances();
+        $valves          = $this->parseInput($input);
+        $this->valves    = $valves->toArray();
+        $this->flowRates = $valves->pluck('flow_rate', 'valve')->toArray();
+
+        // pre-compute shortest paths between all valve pairs
+        $this->distances = $this->calculateDistances();
+
+        // extract only valves with non-zero flow rates
         $this->nonZeroValves = array_values(array_keys(array_filter($this->flowRates, fn ($rate) => $rate > 0)));
 
-        $allValves = (1 << count($this->nonZeroValves)) - 1;
-        return $this->dfs('AA', 'AA', $allValves, 26, 26);
+        // create index lookup for faster position mapping
+        $this->valveToIndex       = array_flip($this->nonZeroValves);
+        $this->valveToIndex['AA'] = 31;
     }
 
-    protected function dfs(string $myPos, string $elephantPos, int $remainingValves, int $myTime, int $elephantTime): int
+    protected function findMaxPressure(string $currentValve, int $remainingValves, int $remainingTime, array &$cache): int
     {
-        if ($myTime <= 0 && $elephantTime <= 0) {
+        // base cases: out of time or all valves opened
+        if ($remainingTime <= 0 || 0 === $remainingValves) {
             return 0;
         }
 
-        $key = $this->getStateKey($myPos, $elephantPos, $remainingValves, $myTime, $elephantTime);
-        if (isset(self::$cache[$key])) {
-            return self::$cache[$key];
+        // check memoization cache
+        $key = $this->getStateKey($currentValve, $remainingValves, $remainingTime);
+        if (isset($cache[$key])) {
+            return $cache[$key];
         }
 
-        $maxPressure = 0;
+        $maxPressure      = 0;
+        $currentDistances = $this->distances[$currentValve];
 
-        // Optimize: Only consider moves for the actor with more time
-        if ($myTime >= $elephantTime) {
-            $maxPressure = $this->tryMoves($myPos, $elephantPos, $remainingValves, $myTime, $elephantTime, true);
-        } else {
-            $maxPressure = $this->tryMoves($elephantPos, $myPos, $remainingValves, $elephantTime, $myTime, false);
-        }
+        // try opening each remaining unopened valve
+        foreach ($this->nonZeroValves as $i => $valve) {
+            $bit = 1 << $i;
 
-        self::$cache[$key] = $maxPressure;
-        return $maxPressure;
-    }
-
-    protected function tryMoves(string $pos, string $otherPos, int $remainingValves, int $time, int $otherTime, bool $isMe): int
-    {
-        $maxPressure = 0;
-        for ($i = 0; $i < count($this->nonZeroValves); $i++) {
-            if (($remainingValves & (1 << $i)) === 0) {
+            // skip if this valve is already open (bit is 0)
+            if (($remainingValves & $bit) === 0) {
                 continue;
             }
-            $valve      = $this->nonZeroValves[$i];
-            $timeToOpen = $this->distances[$pos][$valve] + 1;
 
-            if ($timeToOpen < $time) {
-                $newTime            = $time - $timeToOpen;
-                $pressure           = $this->flowRates[$valve] * $newTime;
-                $newRemainingValves = $remainingValves & ~(1 << $i);
+            // calculate time to travel and open this valve
+            $timeToOpen = $currentDistances[$valve] + 1;
 
-                $subPressure = $isMe
-                    ? $this->dfs($valve, $otherPos, $newRemainingValves, $newTime, $otherTime)
-                    : $this->dfs($otherPos, $valve, $newRemainingValves, $otherTime, $newTime);
+            // only proceed if we have enough time left
+            if ($timeToOpen < $remainingTime) {
+                $newTime  = $remainingTime - $timeToOpen;
+                $pressure = $this->flowRates[$valve] * $newTime;
 
+                // mark this valve as opened by flipping its bit to 0
+                $newRemainingValves = $remainingValves & ~$bit;
+
+                $subPressure = $this->findMaxPressure($valve, $newRemainingValves, $newTime, $cache);
                 $maxPressure = max($maxPressure, $pressure + $subPressure);
             }
         }
-        return $maxPressure;
+
+        return $cache[$key] = $maxPressure;
     }
 
-    protected function getStateKey(string $pos1, string $pos2, int $remainingValves, int $time1, int $time2): string
+    protected function getStateKey(string $pos, int $remainingValves, int $time): int
     {
-        $pos1Id = array_search($pos1, $this->nonZeroValves);
-        $pos2Id = array_search($pos2, $this->nonZeroValves);
+        // use pre-computed index lookup instead of array_search
+        $posId = $this->valveToIndex[$pos];
 
-        // if the position is not in nonZeroValves (e.g., 'AA'), use a special value
-        $pos1Id = false === $pos1Id ? 31 : $pos1Id;
-        $pos2Id = false === $pos2Id ? 31 : $pos2Id;
-
-        if ($pos1Id > $pos2Id || ($pos1Id === $pos2Id && $time1 > $time2)) {
-            [$pos1Id, $pos2Id, $time1, $time2] = [$pos2Id, $pos1Id, $time2, $time1];
-        }
-
-        // use a 64-bit integer (as a string) to store the state
-        return sprintf(
-            '%d',
-            ($pos1Id & 0x1F) | (($pos2Id & 0x1F) << 5) | (($remainingValves & 0xFFFF) << 10) | (($time1 & 0x1F) << 26) | (($time2 & 0x1F) << 31)
-        );
+        // pack state into single integer: pos(5 bits) | valves(16 bits) | time(5 bits)
+        return ($posId & 0x1F) | (($remainingValves & 0xFFFF) << 5) | (($time & 0x1F) << 21);
     }
 
     protected function calculateDistances(): array
     {
+        // compute all-pairs shortest paths using bfs from each valve
         $distances = [];
         foreach ($this->valves as $start => $data) {
             $distances[$start] = $this->bfs($start);
@@ -134,12 +126,15 @@ class Day16 extends Day
 
     protected function bfs(string $start): array
     {
-        $queue = new SplQueue();
-        $queue->enqueue([$start, 0]);
+        // breadth-first search to find shortest path from start to all other valves
+        $queue   = new SplQueue();
         $visited = [$start => 0];
+        $queue->enqueue([$start, 0]);
 
         while (!$queue->isEmpty()) {
-            [$valve, $distance] = $queue->dequeue();
+            /** @var array{string, int} $item */
+            $item               = $queue->dequeue();
+            [$valve, $distance] = $item;
 
             foreach ($this->valves[$valve]['tunnels'] as $neighbor) {
                 if (!isset($visited[$neighbor])) {
@@ -152,36 +147,36 @@ class Day16 extends Day
         return $visited;
     }
 
-    protected function findMaxPressure(string $currentValve, array $openValves, int $remainingTime): int
+    public function solvePart2(mixed $input): int|string|null
     {
-        sort($openValves);
-        $key = "{$currentValve}".implode(',', $openValves)."{$remainingTime}";
+        self::$part2Cache = [];
+        $this->initializeGraph($input);
 
-        if (isset(self::$cache[$key])) {
-            return self::$cache[$key];
-        }
-
-        if (0 === $remainingTime) {
-            return 0;
-        }
-
+        // compute best score for each possible subset of valves (one actor working alone)
+        $allValves   = (1 << count($this->nonZeroValves)) - 1;
+        $scores      = [];
         $maxPressure = 0;
 
-        // try opening the current valve
-        if (!in_array($currentValve, $openValves) && $this->flowRates[$currentValve] > 0) {
-            $newOpenValves     = [...$openValves, $currentValve];
-            $pressureReleased  = $this->flowRates[$currentValve] * ($remainingTime - 1);
-            $recursivePressure = $this->findMaxPressure($currentValve, $newOpenValves, $remainingTime - 1);
-            $maxPressure       = $pressureReleased + $recursivePressure;
+        // only iterate through half the subsets due to symmetry
+        $halfMasks = 1 << (count($this->nonZeroValves) - 1);
+
+        for ($mask = 0; $mask <= $halfMasks; $mask++) {
+            // compute score for this subset
+            if (!isset($scores[$mask])) {
+                $scores[$mask] = $this->findMaxPressure('AA', $mask, 26, self::$part2Cache);
+            }
+
+            // compute complement subset
+            $complement = $allValves ^ $mask;
+            if (!isset($scores[$complement])) {
+                $scores[$complement] = $this->findMaxPressure('AA', $complement, 26, self::$part2Cache);
+            }
+
+            // check if this partition is better than current best
+            $total       = $scores[$mask] + $scores[$complement];
+            $maxPressure = max($maxPressure, $total);
         }
 
-        // try moving to each connected valve
-        foreach ($this->valves[$currentValve]['tunnels'] as $nextValve) {
-            $pressure    = $this->findMaxPressure($nextValve, $openValves, $remainingTime - 1);
-            $maxPressure = max($maxPressure, $pressure);
-        }
-
-        self::$cache[$key] = $maxPressure;
         return $maxPressure;
     }
 

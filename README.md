@@ -1,5 +1,8 @@
 ## Advent of Code 2022 PHP
-The solutions to [advent of code 2022](https://adventofcode.com/2022), solved using PHP 8.2. By [James Thatcher](http://github.com/jthatch)
+The solutions to [advent of code 2022](https://adventofcode.com/2022), solved using PHP 8.5. By [James Thatcher](http://github.com/jthatch)
+
+### Update - December 18th, 2025
+Decided to revisit this years challenge and complete the remaining challenges using PHP 8.5.
 
 ### Solutions 🥳🎉
 > 🎄 [Day 1](/src/Days/Day1.php) 🎅 [Day 2](/src/Days/Day2.php) ☃️ [Day 3](/src/Days/Day3.php) 
@@ -13,7 +16,7 @@ The solutions to [advent of code 2022](https://adventofcode.com/2022), solved us
 > 🧗‍♀️ [Day 22](/src/Days/Day22.php) 🧗‍♂️ [Day 23](/src/Days/Day23.php) 🧗‍♀️ [Day 24](/src/Days/Day24.php)
 > 🧗‍♂️ [Day 25](/src/Days/Day25.php) -->
 ### About
-My attempts at tacking the awesome challenges at [Advent of Code 2022](https://adventofcode.com/2022/day/1) using PHP 8.2.
+My attempts at tacking the awesome challenges at [Advent of Code 2022](https://adventofcode.com/2022/day/1) using PHP 8.5.
 
 
 ![day runner in action](/aoc-2022-jt.png "AOC 2022 PHP by James Thatcher")
@@ -57,6 +60,6 @@ make next
 
 IDE settings:
 - `10000` - xdebug port
-- `aoc-2021` - PHP_IDE_CONFIG (what you put in PHPStorm -> settings -> debug -> server -> name)
+- `aoc-2022` - PHP_IDE_CONFIG (what you put in PHPStorm -> settings -> debug -> server -> name)
 - `/app` - absolute path on the server
 - see [xdebug.ini](/xdebug.ini) if you're stuck

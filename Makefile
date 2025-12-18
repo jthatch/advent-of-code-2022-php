@@ -14,13 +14,13 @@ aocCookie :=$(AOC_COOKIE)
 
 # append --day={N} to make commands to run just that day
 ifdef day
-	onlyThisDay :=--day=$$day
+	onlyThisDay :=--day=$(day)
 else
 	onlyThisDay :=
 endif
 # append --part={N} to make commands to run just that part
 ifdef part
-	onlyThisPart :=--part=$$part
+	onlyThisPart :=--part=$(part)
 else
 	onlyThisPart :=
 endif
@@ -91,7 +91,7 @@ shell: ## Launch a shell into the docker container
 	$(DOCKER_RUN) $(image-name) /bin/bash
 
 xdebug: ## Launch a php container with xdebug (port 10000)
-	@$(DOCKER_RUN) -e XDEBUG_MODE=debug $(image-name) php -dmemory_limit=1G run.php $(runArgs)
+	@$(DOCKER_RUN) --add-host=host.docker.internal:host-gateway -e XDEBUG_MODE=debug $(image-name) php -dmemory_limit=1G run.php $(runArgs)
 
 xdebug-profile: ## Runs the xdebug profiler for analysing performance
 	$(DOCKER_RUN) -e XDEBUG_MODE=profile $(image-name) php -dxdebug.output_dir=/app -dmemory_limit=1G run.php $(runArgs)
