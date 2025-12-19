@@ -44,10 +44,17 @@ image-name :=aoc-2022
 uid        :=$(shell id -u)
 gid        :=$(shell id -g)
 
+# detect if we have a TTY (terminal) available
+ifeq ($(shell test -t 0 && echo 1),1)
+	DOCKER_IT_FLAGS := -it
+else
+	DOCKER_IT_FLAGS := -i
+endif
+
 # define our reusable docker run commands
 # Custom docker image with PHP 8.5 and required extensions (see Dockerfile)
 define DOCKER_RUN
-docker run -it --rm --init \
+docker run $(DOCKER_IT_FLAGS) --rm --init \
 	--name "$(image-name)" \
 	-u "$(uid):$(gid)" \
 	-v "$(PWD):/app" \

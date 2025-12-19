@@ -62,9 +62,4 @@ class Day1 extends Day
             ->map(fn ($chunk) => $chunk->values()->map(fn ($value) => (int) $value))
             ->values();
     }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE1;
-    }
 }

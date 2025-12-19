@@ -107,7 +107,7 @@ class Day16 extends Day
 
     protected function getStateKey(string $pos, int $remainingValves, int $time): int
     {
-        // use pre-computed index lookup instead of array_search
+        // use pre-computed index lookup
         $posId = $this->valveToIndex[$pos];
 
         // pack state into single integer: pos(5 bits) | valves(16 bits) | time(5 bits)

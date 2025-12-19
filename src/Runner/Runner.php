@@ -101,7 +101,7 @@ readonly class Runner implements RunnerInterface
     protected function runMultipleExamples(int $part, Day $day, array $examples, string $solveMethod): void
     {
         foreach ($examples as $i => $example) {
-            $partLetter = chr(97 + $i);
+            $partLetter = chr(65 + $i);
             printf("    Part%d%s \e[1;32m%s\e[0m\n", $part, $partLetter, $day->$solveMethod($example));
         }
     }

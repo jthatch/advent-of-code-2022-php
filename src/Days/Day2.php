@@ -104,9 +104,4 @@ class Day2 extends Day
         return collect($input)
             ->map(fn (string $line) => explode(' ', $line));
     }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE1;
-    }
 }

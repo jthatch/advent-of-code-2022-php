@@ -11,8 +11,8 @@ abstract class Day implements DayInterface
 {
     /** string|array EXAMPLE1 */
     public const EXAMPLE1 = '';
-    /** string|array EXAMPLE2 */
-    public const EXAMPLE2 = '';
+    /** string|array|null EXAMPLE2 there's not always a second example so this can be null */
+    public const EXAMPLE2 = null;
 
     protected mixed $longRunningCallback = null; // Closure
 
@@ -33,11 +33,11 @@ abstract class Day implements DayInterface
     }
 
     /**
-     * Override if there's a second example.
+     * If there's a second example, return that, otherwise return the first example.
      */
     public function getExample2(): mixed
     {
-        return static::EXAMPLE1;
+        return static::EXAMPLE2 ?? static::EXAMPLE1;
     }
 
     /**

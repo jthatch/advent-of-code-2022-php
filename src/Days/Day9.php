@@ -136,9 +136,4 @@ class Day9 extends Day
         return collect($input)
             ->map(fn ($line) => explode(' ', $line));
     }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE2;
-    }
 }

@@ -87,17 +87,25 @@ readonly class ParseCliArgs
         foreach (explode(',', $input) as $chunk) {
             $chunk = mb_trim($chunk);
 
-            // handle range (e.g., "1-5")
+            // handle range (e.g., "1-5" or "Day1-Day5")
             if (str_contains($chunk, '-')) {
-                [$start, $end] = array_map('intval', explode('-', $chunk, 2));
-                $result        = [...$result, ...range($start, $end)];
+                [$start, $end] = explode('-', $chunk, 2);
+                $start         = $this->stripDayPrefix($start);
+                $end           = $this->stripDayPrefix($end);
+                $result        = [...$result, ...range((int) $start, (int) $end)];
             } else {
-                // single value
-                $result[] = (int) $chunk;
+                // single value (e.g., "17" or "Day17")
+                $result[] = (int) $this->stripDayPrefix($chunk);
             }
         }
 
         sort($result);
         return array_unique($result);
+    }
+
+    // strip 'Day' prefix from input (e.g., "Day17" -> "17", "17" -> "17")
+    protected function stripDayPrefix(string $value): string
+    {
+        return preg_replace('/^Day/i', '', mb_trim($value));
     }
 }

@@ -54,9 +54,4 @@ class Day4 extends Day
             // extract the first and last range 2-8 [2,8] for each pair
             ->map(fn (array $pair) => array_map(fn (string $range) => array_map('intval', explode('-', $range)), $pair));
     }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE1;
-    }
 }

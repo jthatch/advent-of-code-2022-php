@@ -86,9 +86,4 @@ class Day3 extends Day
             // sum them all
             ->map(fn ($chunk) => array_sum($chunk))->sum();
     }
-
-    public function getExample2(): mixed
-    {
-        return static::EXAMPLE1;
-    }
 }
