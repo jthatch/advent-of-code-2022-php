@@ -2,7 +2,7 @@
 The solutions to [advent of code 2022](https://adventofcode.com/2022), solved using PHP 8.5. By [James Thatcher](http://github.com/jthatch)
 
 ### Update - December 18th, 2025
-Decided to revisit this years challenge and complete the remaining challenges using PHP 8.5.
+Decided to revisit this repo and try and complete it, as part of this I've upgraded from PHP 8.2 to PHP 8.5.
 
 ### Solutions 🥳🎉
 > 🎄 [Day 1](/src/Days/Day1.php) 🎅 [Day 2](/src/Days/Day2.php) ☃️ [Day 3](/src/Days/Day3.php) 
@@ -10,6 +10,7 @@ Decided to revisit this years challenge and complete the remaining challenges us
 > 🧦 [Day 7](/src/Days/Day7.php) 🎁 [Day 8](/src/Days/Day8.php) ⛄ [Day 9](/src/Days/Day9.php)
 > 🛐 [Day 10](/src/Days/Day10.php) ⛄ [Day 11](/src/Days/Day11.php) 🧝 [Day 12](/src/Days/Day12.php)
 > 🎄 [Day 13](/src/Days/Day13.php) 🎅 [Day 14](/src/Days/Day14.php) ☃️ [Day 15](/src/Days/Day15.php)
+> 🧗‍♀️ [Day 16](/src/Days/Day16.php)
 <!-- 🧗‍♂️ [Day 13](/src/Days/Day13.php) 🧗‍♀️ [Day 14](/src/Days/Day14.php) 🧗‍♂️ [Day 15](/src/Days/Day15.php)
 > 🧗‍♀️ [Day 16](/src/Days/Day16.php) 🧗‍♂️ [Day 17](/src/Days/Day17.php) 🧗‍♀️ [Day 18](/src/Days/Day18.php)
 > 🧗‍♂️ [Day 19](/src/Days/Day19.php) 🧗‍♀️ [Day 20](/src/Days/Day20.php) 🧗‍♂️ [Day 21](/src/Days/Day21.php)
@@ -44,12 +45,15 @@ _Note: checkout the code then run `make run`. The docker and composer libraries 
 `make run day={N} part={N}` e.g. `make run day=16 part=2`
 
 **Create the next days PHP file and download puzzle from server**  
-_Auto detects what current Day you are on and will create the next (only if the files don't exist)_
+_Auto detects what current Day you are on and will create the next Day class (only if the file doesn't exist), get the puzzle input and create the markdown documentation file based on the instructions_
 ```shell
 make next
 # Created new file: src/Days/Day8.php
 # Fetching latest input using day=8 AOC_COOKIE=53616c7465645f5f539435aCL1P
 # ./input/day8.txt downloaded
+# Fetching day 8 instructions...
+# ✓ ./docs/day8.md created
+
 ```
 
 **Use XDebug**  

@@ -113,21 +113,46 @@ pint: ## run php-cs-fixer
 phpstan: ## run phpstan
 	$(DOCKER_RUN) $(image-name) composer run phpstan
 
-get-input: ## Retrieves the latest day's input from server
+get-input: ## Retrieves the day's input from server (specify day=N or uses latest)
 ifndef aocCookie
 	@echo -e "Missing AOC_COOKIE env\n\nPlease login to https://adventofcode.com/ and retrieve your session cookie."
 	@echo -e "Then set the environmental variable AOC_COOKIE. e.g. export AOC_COOKIE=53616c7465645f5f2b44c4d4742765e14...\n"
 else
-	@echo -e "Fetching latest input using day=$(latestDay) AOC_COOKIE=$(aocCookie)"
-	@curl -s --location --request GET 'https://adventofcode.com/2022/day/$(latestDay)/input' --header 'Cookie: session=$(aocCookie)' -o ./input/day$(latestDay).txt && echo "./input/day$(latestDay).txt downloaded" || echo "error downloading"
+ifdef day
+	$(eval targetDay := $(day))
+else
+	$(eval targetDay := $(latestDay))
 endif
-define DAY_TEMPLATE
-<?php\n\ndeclare(strict_types=1);\n\nnamespace App;\n\nuse App\Contracts\DayBehaviour;\n\nclass Day$(nextDay) extends DayBehaviour\n{\n    public function solvePart1(): ?int\n    {\n        // TODO: Implement solvePart1() method.\n        return null;\n    }\n\n    public function solvePart2(): ?int\n    {\n        // TODO: Implement solvePart2() method.\n        return null;\n    }\n}\n
-endef
-next:
+	@echo -e "Fetching day $(targetDay) input..."
+	@curl -s --location --header 'Cookie: session=$(aocCookie)' \
+		'https://adventofcode.com/2022/day/$(targetDay)/input' \
+		-o ./input/day$(targetDay).txt && echo "✓ ./input/day$(targetDay).txt downloaded" || echo "error downloading"
+endif
+
+get-instructions: ## Retrieves and converts the day's instructions to markdown (specify day=N or uses latest)
+ifndef aocCookie
+	@echo -e "Missing AOC_COOKIE env\n\nPlease login to https://adventofcode.com/ and retrieve your session cookie."
+	@echo -e "Then set the environmental variable AOC_COOKIE. e.g. export AOC_COOKIE=53616c7465645f5f2b44c4d4742765e14...\n"
+else
+ifdef day
+	$(eval targetDay := $(day))
+else
+	$(eval targetDay := $(latestDay))
+endif
+	@echo -e "Fetching day $(targetDay) instructions..."
+	@mkdir -p ./docs
+	@curl -s --location --header 'Cookie: session=$(aocCookie)' \
+		'https://adventofcode.com/2022/day/$(targetDay)' \
+		-o ./docs/day$(targetDay).html
+	@docker run --rm -v "$(PWD)/docs:/data" pandoc/core:latest -f html -t gfm /data/day$(targetDay).html -o /data/day$(targetDay).md
+	@rm ./docs/day$(targetDay).html
+	@echo "✓ ./docs/day$(targetDay).md created"
+endif
+next: ## Creates next day's stub file, fetches input and instructions
 	@echo "Creating next day's file..."
 	@next_day=$$(ls src/Days | grep -oE 'Day[0-9]+' | sort -V | tail -n 1 | sed 's/Day//'); \
 	next_day=$$(( $$next_day + 1 )); \
 	sed "s/DayX/Day$$next_day/g" stub/DayX.php.stub > src/Days/Day$$next_day.php; \
 	echo "Created src/Days/Day$$next_day.php"
 	@make get-input
+	@make get-instructions
