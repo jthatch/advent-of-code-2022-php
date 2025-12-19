@@ -100,7 +100,8 @@ readonly class ParseCliArgs
         }
 
         sort($result);
-        return array_unique($result);
+
+        return $result;
     }
 
     // strip 'Day' prefix from input (e.g., "Day17" -> "17", "17" -> "17")
