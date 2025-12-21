@@ -50,12 +50,15 @@ class Day12 extends Day
 
         // Breadth-First Search
         $queue = new SplQueue();
+
         $queue->enqueue([$start, 0]); // [position, steps]
         $visited                       = array_fill(0, $rows, array_fill(0, $cols, false));
         $visited[$start[0]][$start[1]] = true;
 
         while (!$queue->isEmpty()) {
-            [$current, $steps] = $queue->dequeue();
+            /** @var array{int, int} $item */
+            $item              = $queue->dequeue();
+            [$current, $steps] = $item;
             [$x, $y]           = $current;
 
             if ($current === $end) {
