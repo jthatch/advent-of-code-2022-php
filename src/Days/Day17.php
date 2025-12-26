@@ -13,27 +13,35 @@ class Day17 extends Day
     >>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>
     EOF;
 
-    /** @var array|array[] ROCKS these are stored in [y][x] order from top to bottom */
+    /**
+     * @var array|array[] ROCKS these are stored in [y][x] order from top to bottom
+     * 'h' = height (cached for performance, count() is slow)
+     * 'r' = rock shape (array of rows, each row is an array of cells)
+     **/
     protected const array ROCKS = [
-        [['#','#','#','#']],                            // -
-        [['.','#','.'], ['#','#','#'], ['.','#','.']],  // +
-        [['.','.','#'], ['.','.','#'], ['#','#','#']],  // backwards L
-        [['#'],['#'], ['#'], ['#']],                    // |
-        [['#','#'], ['#','#']]                          // square
+        ['h' => 1, 'r' => [['#','#','#','#']]],                            // -
+        ['h' => 3, 'r' => [['.','#','.'], ['#','#','#'], ['.','#','.']]],  // +
+        ['h' => 3, 'r' => [['.','.','#'], ['.','.','#'], ['#','#','#']]],  // backwards L
+        ['h' => 4, 'r' => [['#'],['#'], ['#'], ['#']]],                    // |
+        ['h' => 2, 'r' => [['#','#'], ['#','#']]]                          // square
     ];
     protected const int NO_INTERACTIVE    = 0;
     protected const int INTERACTIVE_DELAY = 2;
+    protected const int KEEP_ROWS         = 1000; // number of rows to keep when pruning
 
     protected int $interactiveModePart1 = self::NO_INTERACTIVE;
     protected int $interactiveModePart2 = self::NO_INTERACTIVE;
 
-    protected array $settledRocks = [];  // permanent grid of settled rocks
-    protected int $highestPoint   = 0;     // track highest settled rock
-    protected int $jetIndex       = 0;         // track jet pattern position across all rocks
+    protected array $settledRocks = []; // permanent grid of settled rocks
+    protected int $highestPoint   = 0;  // track highest settled rock
+    protected int $jetIndex       = 0;  // track jet pattern position across all rocks
+    protected int $jetCount       = 0; // count the total number of jets
+    protected array $state        = [];    // store rock states
 
     public function solvePart1(mixed $input): int|string|null
     {
         $input              = $this->parseInput($input);
+        $this->jetCount     = $input->count();
         $this->settledRocks = [];
         $this->highestPoint = 0;
         $this->jetIndex     = 0;
@@ -43,37 +51,86 @@ class Day17 extends Day
 
         // simulate 2022 rocks falling, cycling through rock types
         for ($i = 0; $i < $totalRocks; $i++) {
-            $rock = static::ROCKS[$i % $rockTypes];
-            $this->simulateRock($rock, $i, $input);
+            $this->simulateRock($i, $i % $rockTypes, $input, $this->interactiveModePart1);
         }
 
         return $this->highestPoint;
     }
 
-    protected function simulateRock(array $rock, int $rockIndex, Collection $jetPattern): void
+    public function solvePart2(mixed $input): int|string|null
     {
-        $rockHeight = count($rock);
-        $rockWidth  = count($rock[0]);
+        $input              = $this->parseInput($input);
+        $this->jetCount     = $input->count();
+        $this->settledRocks = [];
+        $this->highestPoint = 0;
+        $this->jetIndex     = 0;
+        $this->state        = [];
 
-        // starting position: 2 from left, 3 above highest settled rock
+        $rockTypes  = count(static::ROCKS);
+        $totalRocks = 1_000_000_000_000; // actual number we need to find
+
+        // simulate rocks falling until we find a cycle
+        for ($i = 0; $i < $totalRocks; $i++) {
+            $cycleData = $this->simulateRock($i, $i % $rockTypes, $input, $this->interactiveModePart2);
+
+            if ($cycleData) {
+                // we have detected a cycle, where the rock and position repeats.
+                // we can now calculate the final height by multiplying the current height by the cycle length.
+                $cycleStartRock   = $cycleData['rockCount'];
+                $cycleStartHeight = $cycleData['height'];
+                $cycleLength      = $i                  - $cycleStartRock;
+                $cycleHeightGain  = $this->highestPoint - $cycleStartHeight;
+
+                $remainingRocks = $totalRocks - ($i + 1);
+                $completeCycles = intdiv($remainingRocks, $cycleLength);
+                // find the remainder and simulate it below
+                $rocksAfterCycles = $remainingRocks % $cycleLength;
+
+                // fast-forward through complete cycles
+                $heightAfterCycles = $this->highestPoint + ($completeCycles * $cycleHeightGain);
+
+                // track height before simulating remainder
+                $heightBeforeRemainder = $this->highestPoint;
+
+                // simulate the remaining rocks after the cycles
+                for ($j = 0; $j < $rocksAfterCycles; $j++) {
+                    $rockIndex = $i + 1 + $j;
+                    $this->simulateRock($rockIndex, $rockIndex % $rockTypes, $input, $this->interactiveModePart2);
+                }
+
+                // calculate height gained from simulating the remainder rocks
+                $heightGainedFromRemainder = $this->highestPoint - $heightBeforeRemainder;
+
+                return $heightAfterCycles + $heightGainedFromRemainder;
+            }
+        }
+
+        return $this->highestPoint;
+    }
+
+    protected function simulateRock(int $rockCount, int $rockType, Collection $jetPattern, int $interactiveMode): ?array
+    {
+        $rock    = static::ROCKS[$rockType];
+        $jetType = 0;
+        // starting position: 2 from left, 3 above the highest settled rock
         $rockX = 2;
         $rockY = $this->highestPoint + 3;
 
         $settled = false;
         while (!$settled) {
+            $jetType = $this->jetIndex++ % $this->jetCount;
             // render current state
-            if (self::INTERACTIVE_DELAY === $this->interactiveModePart1) {
+            if (self::INTERACTIVE_DELAY === $interactiveMode) {
                 $this->renderGridWithRock($rockX, $rockY, $rock);
-                usleep(100_000);
+                usleep(50_000);
             }
 
-            // apply jet push (left/right) - use global jet index that persists across rocks
-            $jet = $jetPattern->get($this->jetIndex % $jetPattern->count());
-            $this->jetIndex++;
+            // apply jet push (left/right)
+            $newX = '<' === $jetPattern->get($jetType)
+                ? $rockX - 1
+                : $rockX + 1;
 
-            $newX = '<' === $jet ? $rockX - 1 : $rockX + 1;
-
-            // check if horizontal move is valid
+            // check if the horizontal move is valid
             if ($this->canPlaceRock($rock, $newX, $rockY)) {
                 $rockX = $newX;
             }
@@ -87,16 +144,59 @@ class Day17 extends Day
             } else {
                 // can't move down, rock has settled
                 $settled = true;
-                $this->mergeRockIntoGrid($rockX, $rockY, $rock);
+                $this->mergeRockIntoGrid($rockX, $rockY, $rock, self::KEEP_ROWS);
             }
         }
+
+        // track our state for cycle detection (only after tower is tall enough)
+        if ($this->highestPoint >= 20) {
+            $surfaceProfile = $this->getSurfaceProfile(self::KEEP_ROWS);
+            $stateKey       = sprintf('%d-%d-%s', $rockType, $jetType, implode('-', $surfaceProfile));
+
+            if (isset($this->state[$stateKey])) {
+                // cycle found! return the previous state data
+                return $this->state[$stateKey];
+            }
+
+            // store current state for future cycle detection
+            $this->state[$stateKey] = [
+                'rockCount' => $rockCount,
+                'height'    => $this->highestPoint,
+            ];
+        }
+
+        return null;
+    }
+
+    protected function getSurfaceProfile(int $searchDepth): array
+    {
+        $profile = [];
+        $topY    = $this->highestPoint;
+
+        // For each of the 7 columns, scan downward from the top
+        for ($x = 0; $x < 7; $x++) {
+            $maxY = -1;
+
+            for ($y = $topY; $y >= max(0, $topY - $searchDepth); $y--) {
+                if (isset($this->settledRocks[$y][$x]) && '#' === $this->settledRocks[$y][$x]) {
+                    $maxY = $y;
+                    break; // found the highest rock in this column, stop searching
+                }
+            }
+
+            $profile[$x] = $maxY;
+        }
+
+        // Normalize to relative heights from the minimum
+        $minY = min($profile);
+        return array_map(fn ($y) => $y - $minY, $profile);
     }
 
     protected function canPlaceRock(array $rock, int $x, int $y): bool
     {
-        $rockHeight = count($rock);
+        $rockHeight = $rock['h'];
 
-        foreach ($rock as $dy => $row) {
+        foreach ($rock['r'] as $dy => $row) {
             foreach ($row as $dx => $cell) {
                 if ('#' === $cell) {
                     $checkX = $x + $dx;
@@ -119,11 +219,11 @@ class Day17 extends Day
         return true;
     }
 
-    protected function mergeRockIntoGrid(int $x, int $y, array $rock): void
+    protected function mergeRockIntoGrid(int $x, int $y, array $rock, int $pruneDepth): void
     {
-        $rockHeight = count($rock);
+        $rockHeight = $rock['h'];
 
-        foreach ($rock as $dy => $row) {
+        foreach ($rock['r'] as $dy => $row) {
             foreach ($row as $dx => $cell) {
                 if ('#' === $cell) {
                     $finalX = $x + $dx;
@@ -137,57 +237,81 @@ class Day17 extends Day
                 }
             }
         }
+
+        // prune settled rocks to keep only the top N rows for memory efficiency
+        if (0 === $this->highestPoint % $pruneDepth) {
+            $this->settledRocks = array_slice($this->settledRocks, -$pruneDepth, $pruneDepth, true);
+        }
     }
 
     protected function renderGridWithRock(int $rockX, int $rockY, array $rock): void
     {
-        if (!$this->interactiveModePart1) {
-            return;
+        $rockHeight = $rock['h'];
+
+        // get terminal height (default to 40 if can't detect)
+        $terminalHeight = (int) (shell_exec('tput lines') ?: 40);
+        $terminalHeight = max(10, $terminalHeight - 3); // reserve space for info line and floor
+
+        // determine visible Y range - show top of tower if it exceeds terminal height
+        $minSettledY = !empty($this->settledRocks) ? min(array_keys($this->settledRocks)) : 0;
+        $maxY        = max($this->highestPoint, $rockY + $rockHeight) + 2;
+        $towerHeight = $maxY                                          + 1;
+
+        // if tower exceeds terminal height, show only the top portion
+        if ($towerHeight > $terminalHeight) {
+            $minY = $maxY - $terminalHeight + 1;
+        } else {
+            $minY = 0;
         }
 
-        $rockHeight = count($rock);
+        // build sparse grid only for rows we need to display
+        $grid = [];
+        for ($y = $minY; $y <= $maxY; $y++) {
+            $grid[$y] = array_fill(0, 7, '.');
 
-        // create display grid from settled rocks + current falling rock
-        $displayHeight = max($this->highestPoint + 10, $rockY + $rockHeight + 5);
-        $grid          = array_fill(0, $displayHeight, array_fill(0, 7, '.'));
-
-        // place settled rocks
-        foreach ($this->settledRocks as $y => $row) {
-            foreach ($row as $x => $cell) {
-                if ('#' === $cell) {
-                    $grid[$y][$x] = '#';
+            // place settled rocks if they exist at this y
+            if (isset($this->settledRocks[$y])) {
+                foreach ($this->settledRocks[$y] as $x => $cell) {
+                    if ('#' === $cell) {
+                        $grid[$y][$x] = '#';
+                    }
                 }
             }
         }
 
         // overlay current falling rock (invert rock coordinates to match upward y)
-        foreach ($rock as $dy => $row) {
+        foreach ($rock['r'] as $dy => $row) {
             foreach ($row as $dx => $cell) {
                 if ('#' === $cell) {
                     $displayY = $rockY + ($rockHeight - 1 - $dy);
-                    if ($displayY >= 0 && $displayY < $displayHeight) {
+                    if (isset($grid[$displayY])) {
                         $grid[$displayY][$rockX + $dx] = '@';
                     }
                 }
             }
         }
 
-        // render from top down (reverse order so floor is at bottom)
-        $grid = array_reverse($grid);
+        // clear screen and move cursor to bottom
+        echo "\e[2J";
 
-        // clear screen
-        echo "\e[2J\e[H";
+        // render from top down (reverse order so floor is at bottom)
+        $grid = array_reverse($grid, true);
+
+        // move cursor to top of terminal
+        echo "\e[H";
 
         $this->renderGrid($grid);
-        printf("Height: %d | Rock Y: %d\n", $this->highestPoint, $rockY);
+        printf(
+            "Height: %d | Rock Y: %d | Visible: Y=%d-%d\n",
+            $this->highestPoint,
+            $rockY,
+            $minY,
+            $maxY
+        );
     }
 
     protected function renderGrid(array $grid, int $width = 7): void
     {
-        if (!$this->interactiveModePart1) {
-            return;
-        }
-
         foreach ($grid as $row) {
             $coloredRow = implode('', array_map(
                 fn (string $cell) => match ($cell) {
@@ -201,15 +325,6 @@ class Day17 extends Day
         }
         // print the floor in light yellow
         printf("\e[93m+%s+\e[0m\n", str_repeat('-', $width));
-    }
-
-    public function solvePart2(mixed $input): int|string|null
-    {
-        $input = $this->parseInput($input);
-
-        // todo: implement solution for Part 2
-
-        return null;
     }
 
     protected function parseInput(mixed $input): Collection
