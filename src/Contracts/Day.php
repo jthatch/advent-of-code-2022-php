@@ -9,9 +9,9 @@ use ReflectionClass;
 
 abstract class Day implements DayInterface
 {
-    /** string|array EXAMPLE1 */
+    /** @var string|array EXAMPLE1 */
     public const EXAMPLE1 = '';
-    /** string|array|null EXAMPLE2 there's not always a second example so this can be null */
+    /** @var string|array|null EXAMPLE2 there's not always a second example so this can be null */
     public const EXAMPLE2 = null;
 
     protected mixed $longRunningCallback = null; // Closure
@@ -27,7 +27,7 @@ abstract class Day implements DayInterface
 
     abstract public function solvePart2(mixed $input): int|string|null;
 
-    public function getExample1(): mixed
+    public function getExample1(): string|array
     {
         return static::EXAMPLE1;
     }
@@ -35,7 +35,7 @@ abstract class Day implements DayInterface
     /**
      * If there's a second example, return that, otherwise return the first example.
      */
-    public function getExample2(): mixed
+    public function getExample2(): string|array
     {
         return static::EXAMPLE2 ?? static::EXAMPLE1;
     }

@@ -15,6 +15,7 @@ readonly class Runner implements RunnerInterface
     private ?array $days;
 
     public function __construct(
+        private int $year,
         private Options $options,
         private DayFactory $factory = new DayFactory(),
         ?array $days = null
@@ -128,7 +129,7 @@ readonly class Runner implements RunnerInterface
         printf(
             <<<EOF
             \e[32m---------------------------------------------
-            |\e[0m Advent of Code 2022 PHP - James Thatcher\e[32m  |
+            |\e[0m Advent of Code {$this->year} PHP - James Thatcher\e[32m  |
             |\e[0m                                         \e[32m  |
             |\e[0;37m Days: \e[2;37m%-34s \e[0;32m |
             |\e[0;37m Part: \e[2;37m%-34s \e[0;32m |
@@ -145,7 +146,7 @@ readonly class Runner implements RunnerInterface
     protected function showHelp(): void
     {
         echo <<<EOF
-            Advent of Code 2022 PHP runner.
+            Advent of Code {$this->year} PHP runner.
 
             Usage:
              php run.php <options>

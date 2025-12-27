@@ -6,6 +6,7 @@ args=`arg="$(filter-out $(firstword $(MAKECMDGOALS)),$(MAKECMDGOALS))" && echo $
 # to retrieve that input, storing it in ./input/day[N].txt
 # saves time
 OS_NAME   :=$(shell uname -s | tr A-Z a-z)
+year      :=2022
 latestDay :=$(shell if [[ "$(OS_NAME)" == "linux" ]]; then find src/Days -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -printf '%f\n' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1";  else find src/Days -maxdepth 1 -type f  \( -name "Day[0-9][0-9].php" -o -name "Day[0-9].php" \) -print0 | xargs -0 stat -f '%N ' | sort -Vr | head -1 | grep -o '[0-9]\+' || echo "1"; fi)
 nextDay   :=$(shell echo $$(($(latestDay)+1)))
 # in order to retrieve the Days input from the server you must login to adventofcode.com and grab the `session` cookie
@@ -33,14 +34,14 @@ endif
 runArgs:=$(onlyThisDay) $(onlyThisPart) $(withExamples)
 
 help: ## This help.
-	@printf "\033[32m---------------------------------------------------------------------------\n  Advent of Code 2022 - James Thatcher\n  Current Day:\033[33m $(latestDay)\033[32m\n---------------------------------------------------------------------------\033[0m\n"
+	@printf "\033[32m---------------------------------------------------------------------------\n  Advent of Code $(year) - James Thatcher\n  Current Day:\033[33m $(latestDay)\033[32m\n---------------------------------------------------------------------------\033[0m\n"
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
 .PHONY: tests
 
 # basic vars
-image-name :=aoc-2022
+image-name :=aoc-$(year)
 uid        :=$(shell id -u)
 gid        :=$(shell id -g)
 
@@ -125,7 +126,7 @@ else
 endif
 	@echo -e "Fetching day $(targetDay) input..."
 	@curl -s --location --header 'Cookie: session=$(aocCookie)' \
-		'https://adventofcode.com/2022/day/$(targetDay)/input' \
+		'https://adventofcode.com/$(year)/day/$(targetDay)/input' \
 		-o ./input/day$(targetDay).txt && echo "✓ ./input/day$(targetDay).txt downloaded" || echo "error downloading"
 endif
 
@@ -142,7 +143,7 @@ endif
 	@echo -e "Fetching day $(targetDay) instructions..."
 	@mkdir -p ./docs
 	@curl -s --location --header 'Cookie: session=$(aocCookie)' \
-		'https://adventofcode.com/2022/day/$(targetDay)' \
+		'https://adventofcode.com/$(year)/day/$(targetDay)' \
 		-o ./docs/day$(targetDay).html
 	@docker run --rm -v "$(PWD)/docs:/data" pandoc/core:latest -f html -t gfm /data/day$(targetDay).html -o /data/day$(targetDay).md
 	@rm ./docs/day$(targetDay).html

@@ -1,6 +1,6 @@
 <?php
 
-/** Advent of Code 2022 PHP runner.
+/** Advent of Code PHP runner.
  *
  * Usage:
  * php run.php <options>
@@ -52,6 +52,6 @@ $cliArgs = [
 
 $cli     = new ParseCliArgs(...$cliArgs);
 $options = $cli->getOptions();
-$runner  = new Runner($options, new DayFactory());
+$runner  = new Runner(2022, $options, new DayFactory());
 
 $runner->run();
